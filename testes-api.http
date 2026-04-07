@@ -1,0 +1,42 @@
+### 1. Criar um novo Usuário
+POST http://localhost:8080/api/users
+Content-Type: application/json
+
+{
+  "name": "André Boer",
+  "email": "andre@pina.com",
+  "password": "senha123"
+}
+
+### 2. Listar todos os Usuários
+GET http://localhost:8080/api/users
+
+### 3. Criar um novo Card (Tarefa)
+POST http://localhost:8080/api/cards
+Content-Type: application/json
+
+{
+  "title": "Configurar Camada de Service",
+  "description": "Implementar a lógica de negócio e as exceções personalizadas no projeto Pi.Na",
+  "company": "MKT-Pina",
+  "status": "TODO",
+  "priority": "HIGH"
+}
+
+### 4. Listar todos os Cards
+GET http://localhost:8080/api/cards
+
+### 5. Buscar Cards por Empresa
+GET http://localhost:8080/api/cards/company/MKT-Pina
+
+### 6. Atualizar um Card (Troque o ID pelo que o H2 gerou)
+PUT http://localhost:8080/api/cards/1
+Content-Type: application/json
+
+{
+  "status": "IN_PROGRESS",
+  "priority": "CRITICAL"
+}
+
+### 7. Deletar um Card
+DELETE http://localhost:8080/api/cards/1
