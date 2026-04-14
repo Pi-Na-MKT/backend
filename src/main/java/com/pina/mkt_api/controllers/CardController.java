@@ -11,6 +11,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/cards")
+@CrossOrigin(origins = "*")
 public class CardController {
 
     @Autowired
@@ -28,7 +29,7 @@ public class CardController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Card> getCardById(@PathVariable Integer id) {
+    public ResponseEntity<Card> getCardById(@PathVariable Long id) {
         return ResponseEntity.ok(cardService.findById(id));
     }
 
@@ -38,13 +39,13 @@ public class CardController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Card> updateCard(@PathVariable Integer id, @RequestBody Card updatedCard) {
+    public ResponseEntity<Card> updateCard(@PathVariable Long id, @RequestBody Card updatedCard) {
         Card card = cardService.updateCard(id, updatedCard);
         return ResponseEntity.ok(card);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteCard(@PathVariable Integer id) {
+    public ResponseEntity<Void> deleteCard(@PathVariable Long id) {
         cardService.deleteCard(id);
         return ResponseEntity.noContent().build();
     }

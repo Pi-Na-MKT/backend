@@ -27,7 +27,7 @@ public class CardService {
         return cardRepository.findAll();
     }
 
-    public Card findById(Integer id) {
+    public Card findById(Long id) {
         return cardRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Card com ID " + id + " não foi encontrado no sistema."));
     }
@@ -36,20 +36,21 @@ public class CardService {
         return cardRepository.findByCompanyIgnoreCase(companyName);
     }
 
-    public Card updateCard(Integer id, Card updatedCard) {
-        Card existingCard = findById(id);
-
-        if (updatedCard.getTitle() != null) existingCard.setTitle(updatedCard.getTitle());
-        if (updatedCard.getDescription() != null) existingCard.setDescription(updatedCard.getDescription());
-        if (updatedCard.getStatus() != null) existingCard.setStatus(updatedCard.getStatus());
-        if (updatedCard.getPriority() != null) existingCard.setPriority(updatedCard.getPriority());
-        if (updatedCard.getDueDate() != null) existingCard.setDueDate(updatedCard.getDueDate());
-
-        return cardRepository.save(existingCard);
-    }
-
-    public void deleteCard(Integer id) {
+    public void deleteCard(Long id) {
         Card card = findById(id);
         cardRepository.delete(card);
+    }
+
+    public Card updateCard(Long id, Card updatedCard) {
+        Card existingCard = cardRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Card não encontrado"));
+
+        if(updatedCard.getTitle() != null) existingCard.setTitle(updatedCard.getTitle());
+        if(updatedCard.getDescription() != null) existingCard.setDescription(updatedCard.getDescription());
+
+        if(updatedCard.getPosition() != null) existingCard.setPosition(updatedCard.getPosition());
+        if(updatedCard.getColumn() != null) existingCard.setColumn(updatedCard.getColumn());
+
+        return cardRepository.save(existingCard);
     }
 }

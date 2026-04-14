@@ -1,42 +1,109 @@
-### 1. Criar um novo Usuário
-POST http://localhost:8080/api/users
+### 1. Criar o Quadro 1 (Projeto Principal)
+# Deve retornar ID 1
+POST http://localhost:8080/api/boards
 Content-Type: application/json
 
 {
-  "name": "André Boer",
-  "email": "andre@pina.com",
-  "password": "senha123"
+  "name": "Projeto de Extensão - Pi.Na"
 }
 
-### 2. Listar todos os Usuários
-GET http://localhost:8080/api/users
+### 2. Criar o Quadro 2 (Quadro de Estudos/Tarefas)
+# Deve retornar ID 2
+POST http://localhost:8080/api/boards
+Content-Type: application/json
 
-### 3. Criar um novo Card (Tarefa)
+{
+  "name": "Entregáveis da Disciplina"
+}
+
+### 3. Criar Coluna "A Fazer" no Quadro 1
+# Deve retornar Coluna ID 1
+POST http://localhost:8080/api/columns/board/1
+Content-Type: application/json
+
+{
+  "name": "A Fazer",
+  "position": 0
+}
+
+### 4. Criar Coluna "Fazendo" no Quadro 1
+# Deve retornar Coluna ID 2
+POST http://localhost:8080/api/columns/board/1
+Content-Type: application/json
+
+{
+  "name": "Fazendo",
+  "position": 1
+}
+
+### 5. Criar Coluna "Backlog" no Quadro 2 (Para testar isolamento)
+# Deve retornar Coluna ID 3
+POST http://localhost:8080/api/columns/board/2
+Content-Type: application/json
+
+{
+  "name": "Backlog Geral",
+  "position": 0
+}
+
+### 6. Criar Card 1 (Vai para a Coluna 1 do Quadro 1)
 POST http://localhost:8080/api/cards
 Content-Type: application/json
 
 {
-  "title": "Configurar Camada de Service",
-  "description": "Implementar a lógica de negócio e as exceções personalizadas no projeto Pi.Na",
-  "company": "MKT-Pina",
-  "status": "TODO",
-  "priority": "HIGH"
+  "title": "Configurar Swagger",
+  "description": "Adicionar anotações de documentação nos Controllers do projeto",
+  "company": "Faculdade",
+  "priority": "HIGH",
+  "position": 0,
+  "column": { "id": 1 }
 }
 
-### 4. Listar todos os Cards
-GET http://localhost:8080/api/cards
+### 7. Criar Card 2 (Vai para a Coluna 3 do Quadro 2)
+POST http://localhost:8080/api/cards
+Content-Type: application/json
 
-### 5. Buscar Cards por Empresa
-GET http://localhost:8080/api/cards/company/MKT-Pina
+{
+  "title": "Apresentação Final",
+  "description": "Montar os slides para apresentar o Pi.Na para o professor",
+  "company": "Faculdade",
+  "priority": "MEDIUM",
+  "position": 0,
+  "column": { "id": 3 }
+}
 
-### 6. Atualizar um Card (Troque o ID pelo que o H2 gerou)
+### 8. TESTE DO ARRASTAR E SOLTAR (Atualizar Card)
+# Vamos mover o Card 1 (Configurar Swagger) da Coluna 1 para a Coluna 2 (Fazendo)
 PUT http://localhost:8080/api/cards/1
 Content-Type: application/json
 
 {
-  "status": "IN_PROGRESS",
-  "priority": "CRITICAL"
+  "column": { "id": 2 },
+  "position": 0
 }
 
-### 7. Deletar um Card
-DELETE http://localhost:8080/api/cards/1
+### 9. TESTE DE ISOLAMENTO (Listar Colunas do Quadro 1)
+# Aqui, a API SÓ PODE DEVOLVER as colunas "A Fazer" e "Fazendo".
+# A coluna "Backlog" não pode aparecer.
+# O Card "Configurar Swagger" deve aparecer DENTRO da coluna "Fazendo" (ID 2).
+GET http://localhost:8080/api/columns/board/1
+
+### 10. TESTE DE VALIDAÇÃO (Regra de Negócio)
+# Tentando criar um card com título vazio.
+# A sua API DEVE RECUSAR isso e não salvar no banco.
+POST http://localhost:8080/api/cards
+Content-Type: application/json
+
+{
+  "title": "",
+  "description": "Isso não deve ser salvo",
+  "company": "Faculdade",
+  "priority": "LOW",
+  "position": 0,
+  "column": { "id": 1 }
+}
+
+### 11. TESTE DE EFEITO CASCATA (Deletar Coluna)
+# Vamos deletar a Coluna 3 (Backlog do Quadro 2).
+# Se o seu Hibernate estiver correto, o Card 2 ("Apresentação Final") será APAGADO JUNTO do banco!
+DELETE http://localhost:8080/api/columns/3
