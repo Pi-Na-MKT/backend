@@ -1,0 +1,27 @@
+### 1. CADASTRAR USUÁRIO (Acesso Livre)
+POST http://localhost:8080/api/users/register
+Content-Type: application/json
+
+{
+  "name": "André Boer",
+  "email": "andre@faculdade.com",
+  "password": "senha123"
+}
+
+### 2. FAZER LOGIN (Acesso Livre)
+POST http://localhost:8080/api/users/login
+Content-Type: application/json
+
+{
+  "email": "andre@faculdade.com",
+  "password": "senha123"
+}
+
+### 3. TENTAR ACESSAR ROTA PROTEGIDA (Sem Token)
+# O Spring Security DEVE barrar e retornar Status 403 (Forbidden)
+GET http://localhost:8080/api/users
+
+### 4. ACESSAR ROTA PROTEGIDA (Com Token)
+# O Spring Security vai ler o token, validar a assinatura e abrir a porta.
+GET http://localhost:8080/api/users
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhbmRyZUBmYWN1bGRhZGUuY29tIiwiaWF0IjoxNzc2MTQzMzM4LCJleHAiOjE3NzYxNTA1Mzh9.odF6tUpuzuO2PFiGnz0twdfPOomBcwlTNeWj31a178A
