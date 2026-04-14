@@ -1,98 +1,155 @@
-### 1. Criar o Quadro 1 (Projeto Principal)
-# Deve retornar ID 1
+### ==========================================
+### 1. AUTENTICAÇÃO E CAPTURA DE TOKEN
+### ==========================================
+
+### 1.1 CADASTRAR USUÁRIO (Acesso Livre)
+POST http://localhost:8080/api/users/register
+Content-Type: application/json
+
+{
+  "name": "André Boer",
+  "email": "andre@faculdade.com",
+  "password": "senha123"
+}
+
+### 1.2 FAZER LOGIN E SALVAR TOKEN (Acesso Livre)
+# O script abaixo da requisição captura o token automaticamente!
+POST http://localhost:8080/api/users/login
+Content-Type: application/json
+
+{
+  "email": "andre@faculdade.com",
+  "password": "senha123"
+}
+
+> {%
+    // Salva o token retornado na variável global {{auth_token}}
+    client.global.set("auth_token", response.body.token);
+    client.test("Token capturado com sucesso", function() {
+        client.assert(response.status === 200, "Erro no login!");
+    });
+%}
+
+### ==========================================
+### 2. TESTES DE SEGURANÇA BÁSICOS
+### ==========================================
+
+### 2.1 TENTAR ACESSAR ROTA PROTEGIDA (Sem Token)
+# DEVE retornar Status 401 ou 403 (Forbidden)
+GET http://localhost:8080/api/users
+
+### 2.2 ACESSAR ROTA PROTEGIDA (Com Token Automático)
+# DEVE retornar Status 200 OK
+GET http://localhost:8080/api/users
+Authorization: Bearer {{auth_token}}
+
+
+### ==========================================
+### 3. TESTE DE FLUXO DO KANBAN (API CRUD)
+### ==========================================
+
+### 3.1 Criar o Quadro 1 (Projeto Principal) -> ID 1
 POST http://localhost:8080/api/boards
 Content-Type: application/json
+Authorization: Bearer {{auth_token}}
 
 {
   "name": "Projeto de Extensão - Pi.Na"
 }
 
-### 2. Criar o Quadro 2 (Quadro de Estudos/Tarefas)
-# Deve retornar ID 2
+### 3.2 Criar o Quadro 2 (Quadro de Estudos) -> ID 2
 POST http://localhost:8080/api/boards
 Content-Type: application/json
+Authorization: Bearer {{auth_token}}
 
 {
   "name": "Entregáveis da Disciplina"
 }
 
-### 3. Criar Coluna "A Fazer" no Quadro 1
-# Deve retornar Coluna ID 1
+### 3.3 Criar Coluna "A Fazer" no Quadro 1 -> Coluna ID 1
 POST http://localhost:8080/api/columns/board/1
 Content-Type: application/json
+Authorization: Bearer {{auth_token}}
 
 {
   "name": "A Fazer",
   "position": 0
 }
 
-### 4. Criar Coluna "Fazendo" no Quadro 1
-# Deve retornar Coluna ID 2
+### 3.4 Criar Coluna "Fazendo" no Quadro 1 -> Coluna ID 2
 POST http://localhost:8080/api/columns/board/1
 Content-Type: application/json
+Authorization: Bearer {{auth_token}}
 
 {
   "name": "Fazendo",
   "position": 1
 }
 
-### 5. Criar Coluna "Backlog" no Quadro 2 (Para testar isolamento)
-# Deve retornar Coluna ID 3
+### 3.5 Criar Coluna "Backlog" no Quadro 2 -> Coluna ID 3
 POST http://localhost:8080/api/columns/board/2
 Content-Type: application/json
+Authorization: Bearer {{auth_token}}
 
 {
   "name": "Backlog Geral",
   "position": 0
 }
 
-### 6. Criar Card 1 (Vai para a Coluna 1 do Quadro 1)
+### 3.6 Criar Card 1 na Coluna 1
 POST http://localhost:8080/api/cards
 Content-Type: application/json
+Authorization: Bearer {{auth_token}}
 
 {
   "title": "Configurar Swagger",
-  "description": "Adicionar anotações de documentação nos Controllers do projeto",
+  "description": "Adicionar anotações de documentação nos Controllers",
   "company": "Faculdade",
   "priority": "HIGH",
   "position": 0,
   "column": { "id": 1 }
 }
 
-### 7. Criar Card 2 (Vai para a Coluna 3 do Quadro 2)
+### 3.7 Criar Card 2 na Coluna 3
 POST http://localhost:8080/api/cards
 Content-Type: application/json
+Authorization: Bearer {{auth_token}}
 
 {
   "title": "Apresentação Final",
-  "description": "Montar os slides para apresentar o Pi.Na para o professor",
+  "description": "Montar os slides do projeto",
   "company": "Faculdade",
   "priority": "MEDIUM",
   "position": 0,
   "column": { "id": 3 }
 }
 
-### 8. TESTE DO ARRASTAR E SOLTAR (Atualizar Card)
-# Vamos mover o Card 1 (Configurar Swagger) da Coluna 1 para a Coluna 2 (Fazendo)
+
+### ==========================================
+### 4. REGRAS DE NEGÓCIO E RELACIONAMENTOS
+### ==========================================
+
+### 4.1 Atualizar Card (Arrastar e Soltar)
+# Move o Card 1 da Coluna 1 para a Coluna 2
 PUT http://localhost:8080/api/cards/1
 Content-Type: application/json
+Authorization: Bearer {{auth_token}}
 
 {
   "column": { "id": 2 },
   "position": 0
 }
 
-### 9. TESTE DE ISOLAMENTO (Listar Colunas do Quadro 1)
-# Aqui, a API SÓ PODE DEVOLVER as colunas "A Fazer" e "Fazendo".
-# A coluna "Backlog" não pode aparecer.
-# O Card "Configurar Swagger" deve aparecer DENTRO da coluna "Fazendo" (ID 2).
+### 4.2 Teste de Isolamento (Listar Colunas do Quadro 1)
+# O Card 1 deve aparecer dentro da Coluna 2. A Coluna 3 não deve aparecer.
 GET http://localhost:8080/api/columns/board/1
+Authorization: Bearer {{auth_token}}
 
-### 10. TESTE DE VALIDAÇÃO (Regra de Negócio)
-# Tentando criar um card com título vazio.
-# A sua API DEVE RECUSAR isso e não salvar no banco.
+### 4.3 Teste de Validação (Card sem Título)
+# DEVE retornar erro (400 Bad Request ou 500)
 POST http://localhost:8080/api/cards
 Content-Type: application/json
+Authorization: Bearer {{auth_token}}
 
 {
   "title": "",
@@ -103,7 +160,7 @@ Content-Type: application/json
   "column": { "id": 1 }
 }
 
-### 11. TESTE DE EFEITO CASCATA (Deletar Coluna)
-# Vamos deletar a Coluna 3 (Backlog do Quadro 2).
-# Se o seu Hibernate estiver correto, o Card 2 ("Apresentação Final") será APAGADO JUNTO do banco!
+### 4.4 Teste de Efeito Cascata (Deletar Coluna)
+# O Card 2 será apagado junto com a Coluna 3
 DELETE http://localhost:8080/api/columns/3
+Authorization: Bearer {{auth_token}}

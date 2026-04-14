@@ -37,17 +37,17 @@ public class UserController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody User loginData) {
         try {
-            // 1. Vai no seu Service e procura o usuário no banco de dados
             User user = userService.login(loginData.getEmail(), loginData.getPassword());
-
-            // 2. Se a senha estiver certa, fabrica o Token JWT
             String token = jwtUtil.generateToken(user.getEmail());
 
-            // 3. Devolve um JSON com o Token para o React salvar no localStorage
-            return ResponseEntity.ok().body("{\"token\": \"" + token + "\", \"userId\": " + user.getId() + ", \"name\": \"" + user.getName() + "\"}");
+            java.util.Map<String, Object> responseBody = new java.util.HashMap<>();
+            responseBody.put("token", token);
+            responseBody.put("userId", user.getId());
+            responseBody.put("name", user.getName());
+
+            return ResponseEntity.ok(responseBody);
 
         } catch (RuntimeException e) {
-            // Se a senha estiver errada ou usuário não existir, devolve Erro 401
             return ResponseEntity.status(401).body("{\"erro\": \"" + e.getMessage() + "\"}");
         }
     }
