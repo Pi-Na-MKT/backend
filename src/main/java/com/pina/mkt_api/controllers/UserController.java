@@ -1,54 +1,73 @@
 package com.pina.mkt_api.controllers;
 
 import com.pina.mkt_api.entities.User;
+import com.pina.mkt_api.security.JwtUtil;
 import com.pina.mkt_api.services.UserService;
-import com.pina.mkt_api.security.JwtUtil; // Importação da nossa classe de segurança
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity; // Importação para manipular status HTTP
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/users")
 @CrossOrigin(origins = "*")
 public class UserController {
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
+    private final JwtUtil jwtUtil;
 
-    @Autowired
-    private JwtUtil jwtUtil; // Injetando a classe que fabrica os Tokens
+    public UserController(UserService userService, JwtUtil jwtUtil) {
+        this.userService = userService;
+        this.jwtUtil = jwtUtil;
+    }
 
-    // Essa rota agora está PROTEGIDA pelo JWT (você só consegue buscar a lista se mandar o token)
     @GetMapping
-    public List<User> getAllUsers() {
-        return userService.findAllUsers();
+    public ResponseEntity<List<User>> getAll() {
+        return ResponseEntity.ok(userService.findAllUsers());
     }
 
-    // Mapeamos para /register para combinar com a liberação no SecurityConfig
+    @GetMapping("/{id}")
+    public ResponseEntity<User> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(userService.findById(id));
+    }
+
     @PostMapping("/register")
-    public ResponseEntity<User> createUser(@RequestBody User user) {
-        User novoUsuario = userService.createUser(user);
-        return ResponseEntity.status(201).body(novoUsuario);
+    public ResponseEntity<User> register(@RequestBody User user) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(userService.register(user));
     }
 
-    // A Rota Mágica do Login (Totalmente Liberada)
+    @PostMapping
+    public ResponseEntity<User> create(@RequestBody User user) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(userService.createUser(user));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<User> update(@PathVariable Long id, @RequestBody User user) {
+        return ResponseEntity.ok(userService.updateUser(id, user));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        userService.deleteUser(id);
+        return ResponseEntity.noContent().build();
+    }
+
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody User loginData) {
-        try {
-            User user = userService.login(loginData.getEmail(), loginData.getPassword());
-            String token = jwtUtil.generateToken(user.getEmail());
+    public ResponseEntity<Map<String, Object>> login(@RequestBody User loginData) {
 
-            java.util.Map<String, Object> responseBody = new java.util.HashMap<>();
-            responseBody.put("token", token);
-            responseBody.put("userId", user.getId());
-            responseBody.put("name", user.getName());
+        User user = userService.login(loginData.getEmail(), loginData.getPassword());
 
-            return ResponseEntity.ok(responseBody);
+        String token = jwtUtil.generateToken(user.getEmail());
 
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(401).body("{\"erro\": \"" + e.getMessage() + "\"}");
-        }
+        Map<String, Object> response = new HashMap<>();
+        response.put("token", token);
+        response.put("userId", user.getId());
+        response.put("name", user.getName());
+        response.put("role", user.getRole());
+
+        return ResponseEntity.ok(response);
     }
 }
