@@ -1,5 +1,7 @@
 package com.pina.mkt_api.controllers;
 
+import com.pina.mkt_api.dtos.BoardColumnDTOs.BoardColumnRequestDTO;
+import com.pina.mkt_api.dtos.BoardColumnDTOs.BoardColumnResponseDTO;
 import com.pina.mkt_api.entities.BoardColumn;
 import com.pina.mkt_api.services.BoardColumnService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -7,14 +9,16 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/columns")
 @CrossOrigin(origins = "*")
-// @Tag vai servir pra agrupar e descrever os endpoints relacionados ao "Board Columns"
 @Tag(name = "Board Columns", description = "Gerenciamento de colunas do board")
 public class BoardColumnController {
 
@@ -25,46 +29,60 @@ public class BoardColumnController {
     }
 
     @PostMapping("/board/{boardId}")
-    // @Operation descreve o que o endpoint faz
     @Operation(summary = "Criar coluna", description = "Cria uma nova coluna em um board")
-    // @ApiResponses documenta os possíveis status de resposta da API
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Coluna criada com sucesso"),
+            @ApiResponse(responseCode = "201", description = "Coluna criada com sucesso"),
             @ApiResponse(responseCode = "400", description = "Erro de validação"),
             @ApiResponse(responseCode = "401", description = "Não autorizado")
     })
-    public BoardColumn create(
-            // @Parameter adiciona descrição ao parâmetro do endpoint
+    public ResponseEntity<BoardColumnResponseDTO> create(
             @Parameter(description = "ID do board onde a coluna será criada") @PathVariable Long boardId,
-            @RequestBody BoardColumn column) {
-        return service.create(boardId, column);
+            @Parameter(description = "Dados da coluna") @RequestBody BoardColumnRequestDTO requestDTO) {
+
+        BoardColumn column = new BoardColumn();
+        column.setName(requestDTO.name());
+        column.setPosition(requestDTO.position());
+
+        BoardColumn savedColumn = service.create(boardId, column);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(toDTO(savedColumn));
     }
 
     @GetMapping("/board/{boardId}")
-// @Operation descreve o que o endpoint faz
     @Operation(summary = "Listar colunas", description = "Retorna todas as colunas de um board")
-// @ApiResponses documenta os possíveis status de resposta da API
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista de colunas retornada com sucesso"),
             @ApiResponse(responseCode = "404", description = "Board não encontrado")
     })
-    public List<BoardColumn> getByBoard(
-            // @Parameter adicion descrição ao parâmetro do endpoint
+    public ResponseEntity<List<BoardColumnResponseDTO>> getByBoard(
             @Parameter(description = "ID do board") @PathVariable Long boardId) {
-        return service.getByBoard(boardId);
+
+        List<BoardColumnResponseDTO> response = service.getByBoard(boardId).stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{id}")
-// @Operation descreve o que o endpoint faz
     @Operation(summary = "Excluir coluna", description = "Remove uma coluna pelo seu ID")
-// @ApiResponses documenta os possíveis status de resposta da API
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Coluna removida com sucesso"),
             @ApiResponse(responseCode = "404", description = "Coluna não encontrada")
     })
-    public void delete(
-            // @Parameter adiciona descrição ao parâmetro do endpoint
+    public ResponseEntity<Void> delete(
             @Parameter(description = "ID da coluna a ser removida") @PathVariable Long id) {
         service.deleteColumn(id);
+
+        return ResponseEntity.noContent().build();
+    }
+
+    private BoardColumnResponseDTO toDTO(BoardColumn column) {
+        return new BoardColumnResponseDTO(
+                column.getId(),
+                column.getName(),
+                column.getPosition(),
+                column.getBoard() != null ? column.getBoard().getId() : null
+        );
     }
 }

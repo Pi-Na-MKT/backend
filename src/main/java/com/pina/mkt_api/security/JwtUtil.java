@@ -11,12 +11,10 @@ import java.util.Date;
 
 @Component
 public class JwtUtil {
-
-    // Chave secreta usada para assinar o token.
     private static final String SECRET_STRING = "PiNaProjetoFaculdadeChaveSuperSecreta2026!!!";
     private final Key SECRET_KEY = Keys.hmacShaKeyFor(SECRET_STRING.getBytes());
 
-    // Tempo de validade do Token (Ex: 2 horas)
+    // Tempo de validade do Token: 2 horas
     private final long EXPIRATION_TIME = 1000 * 60 * 60 * 2;
 
     public String generateToken(String email) {

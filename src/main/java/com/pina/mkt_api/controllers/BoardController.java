@@ -1,5 +1,7 @@
 package com.pina.mkt_api.controllers;
 
+import com.pina.mkt_api.dtos.BoardDTOs.BoardRequestDTO;
+import com.pina.mkt_api.dtos.BoardDTOs.BoardResponseDTO;
 import com.pina.mkt_api.entities.Board;
 import com.pina.mkt_api.services.BoardService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -7,14 +9,16 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/boards")
 @CrossOrigin(origins = "*")
-// @Tag serve para agrupar e descrever os endpoints relacionados a "Boards"
 @Tag(name = "Boards", description = "Gerenciamento de boards")
 public class BoardController {
 
@@ -25,18 +29,21 @@ public class BoardController {
     }
 
     @PostMapping
-    // @Operation descreve o que o endpoint faz (resumo e detalhes)
     @Operation(summary = "Criar board", description = "Cria um novo board")
-    // @ApiResponses documenta os possíveis status de resposta da API
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Board criado com sucesso"),
+            @ApiResponse(responseCode = "201", description = "Board criado com sucesso"),
             @ApiResponse(responseCode = "400", description = "Erro de validação"),
             @ApiResponse(responseCode = "401", description = "Não autorizado")
     })
-    public Board create(
-            // @Parameter adiciona descrição ao parâmetro do endpoint
-            @Parameter(description = "Objeto Board a ser criado") @RequestBody Board board) {
-        return service.create(board);
+    public ResponseEntity<BoardResponseDTO> create(
+            @Parameter(description = "Dados do Board") @RequestBody BoardRequestDTO requestDTO) {
+
+        Board board = new Board();
+        board.setName(requestDTO.name());
+
+        Board savedBoard = service.create(board);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(toDTO(savedBoard));
     }
 
     @GetMapping
@@ -45,7 +52,18 @@ public class BoardController {
             @ApiResponse(responseCode = "200", description = "Lista de boards retornada com sucesso"),
             @ApiResponse(responseCode = "404", description = "Nenhum board encontrado")
     })
-    public List<Board> getAll() {
-        return service.findAll();
+    public ResponseEntity<List<BoardResponseDTO>> getAll() {
+        List<BoardResponseDTO> response = service.findAll().stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(response);
+    }
+
+    private BoardResponseDTO toDTO(Board board) {
+        return new BoardResponseDTO(
+                board.getId(),
+                board.getName()
+        );
     }
 }

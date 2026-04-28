@@ -1,39 +1,30 @@
 package com.pina.mkt_api.entities;
 
 import com.pina.mkt_api.enums.Role;
-import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 
 @Entity
 @Table(name = "users")
-// @Schema descreve a entidade para aparecer no Swagger como modelo de dados
-@Schema(name = "User", description = "Representa um usuário do sistema")
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Schema(description = "Identificador único do usuário", example = "1")
     private Long id;
 
     @Column(nullable = false)
-    @Schema(description = "Nome completo do usuário", example = "Maria Silva")
     private String name;
 
     @Column(nullable = false, unique = true)
-    @Schema(description = "Email do usuário (único)", example = "maria.silva@email.com")
     private String email;
 
     @Column(nullable = false)
-    @Schema(description = "Senha do usuário", example = "123456")
     private String password;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    @Schema(description = "Papel do usuário no sistema", example = "ADMIN")
     private Role role;
 
     @Column(nullable = false)
-    @Schema(description = "Indica se o usuário está ativo", example = "true")
     private Boolean active = true;
 
     public Long getId() { return id; }
