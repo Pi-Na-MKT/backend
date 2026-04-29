@@ -5,11 +5,10 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Entity
-@Table(name = "boards")
-public class Board {
+@Table(name = "companies")
+public class Company {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -18,11 +17,8 @@ public class Board {
     @Column(nullable = false, length = 100)
     private String name;
 
-    @Column(length = 500)
-    private String description;
-
-    @Column(name = "background_color", length = 20)
-    private String backgroundColor;
+    @Column(nullable = false, length = 100, unique = true)
+    private String slug;
 
     @Column(nullable = false)
     private Boolean active = true;
@@ -34,27 +30,14 @@ public class Board {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
-    @ManyToOne
-    @JoinColumn(name = "company_id", nullable = false)
-    private Company company;
-
-    @ManyToOne
-    private User user;
-
-    @OneToMany(mappedBy = "board", cascade = CascadeType.ALL)
-    private List<BoardColumn> columns;
-
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
 
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
-
-    public String getBackgroundColor() { return backgroundColor; }
-    public void setBackgroundColor(String backgroundColor) { this.backgroundColor = backgroundColor; }
+    public String getSlug() { return slug; }
+    public void setSlug(String slug) { this.slug = slug; }
 
     public Boolean getActive() { return active; }
     public void setActive(Boolean active) { this.active = active; }
@@ -64,13 +47,4 @@ public class Board {
 
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
-
-    public Company getCompany() { return company; }
-    public void setCompany(Company company) { this.company = company; }
-
-    public User getUser() { return user; }
-    public void setUser(User user) { this.user = user; }
-
-    public List<BoardColumn> getColumns() { return columns; }
-    public void setColumns(List<BoardColumn> columns) { this.columns = columns; }
 }
