@@ -1,5 +1,7 @@
 package com.pina.mkt_api.controllers;
 
+import com.pina.mkt_api.dtos.UserDTOs.UserRequestDTO;
+import com.pina.mkt_api.dtos.UserDTOs.UserResponseDTO;
 import com.pina.mkt_api.entities.User;
 import com.pina.mkt_api.security.JwtUtil;
 import com.pina.mkt_api.services.UserService;
@@ -15,11 +17,11 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/users")
 @CrossOrigin(origins = "*")
-// @Tag serve para agrupar e descrever os endpoints relacionados a "Users"
 @Tag(name = "Users", description = "Gerenciamento de usuários e autenticação")
 public class UserController {
 
@@ -36,8 +38,11 @@ public class UserController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista de usuários retornada com sucesso")
     })
-    public ResponseEntity<List<User>> getAll() {
-        return ResponseEntity.ok(userService.findAllUsers());
+    public ResponseEntity<List<UserResponseDTO>> getAll() {
+        List<UserResponseDTO> response = userService.findAllUsers().stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{id}")
@@ -46,9 +51,10 @@ public class UserController {
             @ApiResponse(responseCode = "200", description = "Usuário encontrado"),
             @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
     })
-    public ResponseEntity<User> getById(
+    public ResponseEntity<UserResponseDTO> getById(
             @Parameter(description = "ID do usuário") @PathVariable Long id) {
-        return ResponseEntity.ok(userService.findById(id));
+        User user = userService.findById(id);
+        return ResponseEntity.ok(toDTO(user));
     }
 
     @PostMapping("/register")
@@ -57,56 +63,58 @@ public class UserController {
             @ApiResponse(responseCode = "201", description = "Usuário criado com sucesso"),
             @ApiResponse(responseCode = "400", description = "Erro de validação")
     })
-    public ResponseEntity<User> register(
-            @Parameter(description = "Objeto User a ser registrado") @RequestBody User user) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(userService.register(user));
+    public ResponseEntity<UserResponseDTO> register(
+            @Parameter(description = "Dados do usuário") @RequestBody UserRequestDTO requestDTO) {
+
+        User user = new User();
+        user.setName(requestDTO.name());
+        user.setEmail(requestDTO.email());
+        user.setPassword(requestDTO.password());
+
+        User savedUser = userService.register(user);
+        return ResponseEntity.status(HttpStatus.CREATED).body(toDTO(savedUser));
     }
 
     @PostMapping
     @Operation(summary = "Criar usuário (admin)", description = "Cria um novo usuário via API administrativa")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Usuário criado com sucesso"),
-            @ApiResponse(responseCode = "400", description = "Erro de validação")
-    })
-    public ResponseEntity<User> create(
-            @Parameter(description = "Objeto User a ser criado") @RequestBody User user) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(userService.createUser(user));
+    public ResponseEntity<UserResponseDTO> create(@RequestBody UserRequestDTO requestDTO) {
+        User user = new User();
+        user.setName(requestDTO.name());
+        user.setEmail(requestDTO.email());
+        user.setPassword(requestDTO.password());
+
+        User savedUser = userService.createUser(user);
+        return ResponseEntity.status(HttpStatus.CREATED).body(toDTO(savedUser));
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "Atualizar usuário", description = "Atualiza os dados de um usuário existente")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Usuário atualizado com sucesso"),
-            @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
-    })
-    public ResponseEntity<User> update(
-            @Parameter(description = "ID do usuário a ser atualizado") @PathVariable Long id,
-            @RequestBody User user) {
-        return ResponseEntity.ok(userService.updateUser(id, user));
+    public ResponseEntity<UserResponseDTO> update(
+            @Parameter(description = "ID do usuário") @PathVariable Long id,
+            @RequestBody UserRequestDTO requestDTO) {
+
+        User user = new User();
+        user.setName(requestDTO.name());
+        user.setEmail(requestDTO.email());
+        user.setPassword(requestDTO.password());
+
+        User updatedUser = userService.updateUser(id, user);
+        return ResponseEntity.ok(toDTO(updatedUser));
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Excluir usuário", description = "Remove um usuário pelo seu ID")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "Usuário removido com sucesso"),
-            @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
-    })
-    public ResponseEntity<Void> delete(
-            @Parameter(description = "ID do usuário a ser removido") @PathVariable Long id) {
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/login")
     @Operation(summary = "Login de usuário", description = "Realiza login e retorna um token JWT")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Login realizado com sucesso"),
-            @ApiResponse(responseCode = "401", description = "Credenciais inválidas")
-    })
     public ResponseEntity<Map<String, Object>> login(
-            @Parameter(description = "Credenciais de login (email e senha)") @RequestBody User loginData) {
+            @RequestBody UserRequestDTO loginData) {
 
-        User user = userService.login(loginData.getEmail(), loginData.getPassword());
+        User user = userService.login(loginData.email(), loginData.password());
         String token = jwtUtil.generateToken(user.getEmail());
 
         Map<String, Object> response = new HashMap<>();
@@ -116,5 +124,15 @@ public class UserController {
         response.put("role", user.getRole());
 
         return ResponseEntity.ok(response);
+    }
+
+    private UserResponseDTO toDTO(User user) {
+        return new UserResponseDTO(
+                user.getId(),
+                user.getName(),
+                user.getEmail(),
+                user.getRole(),
+                user.getActive()
+        );
     }
 }

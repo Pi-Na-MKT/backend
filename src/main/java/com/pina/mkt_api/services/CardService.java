@@ -15,7 +15,7 @@ public class CardService {
     @Autowired
     private CardRepository cardRepository;
 
-    public Card createCard(Card card) {
+    public Card createCard(Long columnId, Card card) {
         if (card.getTitle() == null || card.getTitle().trim().isEmpty()) {
             throw new BusinessRuleException("O título do card é obrigatório.");
         }
