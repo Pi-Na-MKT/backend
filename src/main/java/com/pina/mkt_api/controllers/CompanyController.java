@@ -31,7 +31,7 @@ public class CompanyController {
         Company company = new Company();
         company.setName(requestDTO.name());
         company.setSlug(requestDTO.slug());
-        company.setActive(requestDTO.active() != null ? requestDTO.active() : true);
+        company.setIsActive(requestDTO.active() != null ? requestDTO.active() : true);
 
         Company savedCompany = service.create(company);
         return ResponseEntity.status(HttpStatus.CREATED).body(toDTO(savedCompany));
@@ -59,7 +59,7 @@ public class CompanyController {
         Company company = new Company();
         company.setName(requestDTO.name());
         company.setSlug(requestDTO.slug());
-        company.setActive(requestDTO.active());
+        company.setIsActive(requestDTO.active());
 
         Company updatedCompany = service.update(id, company);
         return ResponseEntity.ok(toDTO(updatedCompany));
@@ -77,7 +77,7 @@ public class CompanyController {
                 company.getId(),
                 company.getName(),
                 company.getSlug(),
-                company.getActive(),
+                company.getIsActive(),
                 company.getCreatedAt(),
                 company.getUpdatedAt()
         );

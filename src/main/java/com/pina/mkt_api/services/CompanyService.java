@@ -36,7 +36,6 @@ public class CompanyService {
     public Company update(Long id, Company dadosAtualizados) {
         Company companyExistente = findById(id);
 
-        // Verifica se está tentando mudar o slug para um que já existe em outra empresa
         if (!companyExistente.getSlug().equals(dadosAtualizados.getSlug()) && repository.existsBySlug(dadosAtualizados.getSlug())) {
             throw new BusinessRuleException("Já existe outra empresa utilizando este slug.");
         }
@@ -44,8 +43,8 @@ public class CompanyService {
         companyExistente.setName(dadosAtualizados.getName());
         companyExistente.setSlug(dadosAtualizados.getSlug());
 
-        if (dadosAtualizados.getActive() != null) {
-            companyExistente.setActive(dadosAtualizados.getActive());
+        if (dadosAtualizados.getIsActive() != null) {
+            companyExistente.setIsActive(dadosAtualizados.getIsActive());
         }
 
         return repository.save(companyExistente);

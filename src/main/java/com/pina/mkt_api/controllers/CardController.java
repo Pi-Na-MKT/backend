@@ -3,6 +3,7 @@ package com.pina.mkt_api.controllers;
 import com.pina.mkt_api.dtos.CardDTOs.CardRequestDTO;
 import com.pina.mkt_api.dtos.CardDTOs.CardResponseDTO;
 import com.pina.mkt_api.entities.Card;
+import com.pina.mkt_api.entities.User;
 import com.pina.mkt_api.services.CardService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -19,7 +20,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/cards")
 @CrossOrigin(origins = "*")
-@Tag(name = "Cards", description = "Gerenciamento de cards")
+@Tag(name = "Cards", description = "Gerenciamento de cards e tarefas")
 public class CardController {
 
     private final CardService cardService;
@@ -29,7 +30,7 @@ public class CardController {
     }
 
     @PostMapping("/column/{columnId}")
-    @Operation(summary = "Criar card", description = "Cria um novo card em uma coluna específica")
+    @Operation(summary = "Criar card", description = "Cria um novo card em uma coluna específica e pode atribuir usuários")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Card criado com sucesso"),
             @ApiResponse(responseCode = "400", description = "Erro de validação"),
@@ -42,7 +43,7 @@ public class CardController {
         Card card = new Card();
         updateEntityFromDTO(card, requestDTO);
 
-        Card savedCard = cardService.createCard(columnId, card);
+        Card savedCard = cardService.createCard(columnId, card, requestDTO.assignedUserIds());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(toDTO(savedCard));
     }
@@ -63,22 +64,13 @@ public class CardController {
         return ResponseEntity.ok(toDTO(card));
     }
 
-    @GetMapping("/company/{companyName}")
-    @Operation(summary = "Buscar cards por empresa", description = "Retorna todos os cards de uma empresa específica")
-    public ResponseEntity<List<CardResponseDTO>> getCardsByCompany(@PathVariable String companyName) {
-        List<CardResponseDTO> response = cardService.findByCompany(companyName).stream()
-                .map(this::toDTO)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(response);
-    }
-
     @PutMapping("/{id}")
     @Operation(summary = "Atualizar card", description = "Atualiza os dados de um card existente")
     public ResponseEntity<CardResponseDTO> updateCard(@PathVariable Long id, @RequestBody CardRequestDTO requestDTO) {
         Card cardDetails = new Card();
         updateEntityFromDTO(cardDetails, requestDTO);
 
-        Card updatedCard = cardService.updateCard(id, cardDetails);
+        Card updatedCard = cardService.updateCard(id, cardDetails, requestDTO.assignedUserIds());
         return ResponseEntity.ok(toDTO(updatedCard));
     }
 
@@ -95,12 +87,15 @@ public class CardController {
                 card.getTitle(),
                 card.getDescription(),
                 card.getPriority(),
-                card.getCompany(),
                 card.getPosition(),
+                card.getIsActive(),
                 card.getCreatedAt(),
                 card.getUpdatedAt(),
                 card.getDueDate(),
-                card.getColumn() != null ? card.getColumn().getId() : null
+                card.getColumn() != null ? card.getColumn().getId() : null,
+
+                card.getAssignedUsers() != null ?
+                        card.getAssignedUsers().stream().map(User::getId).collect(Collectors.toList()) : null
         );
     }
 
@@ -108,8 +103,8 @@ public class CardController {
         card.setTitle(dto.title());
         card.setDescription(dto.description());
         card.setPriority(dto.priority());
-        card.setCompany(dto.company());
         card.setPosition(dto.position());
         card.setDueDate(dto.dueDate());
+        if (dto.isActive() != null) card.setIsActive(dto.isActive());
     }
 }
