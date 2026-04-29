@@ -34,10 +34,7 @@ public class UserController {
     }
 
     @GetMapping
-    @Operation(summary = "Listar usuários", description = "Retorna todos os usuários cadastrados")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Lista de usuários retornada com sucesso")
-    })
+    @Operation(summary = "Listar usuários ativos", description = "Retorna todos os usuários cadastrados e ativos")
     public ResponseEntity<List<UserResponseDTO>> getAll() {
         List<UserResponseDTO> response = userService.findAllUsers().stream()
                 .map(this::toDTO)
@@ -46,64 +43,47 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Buscar usuário por ID", description = "Retorna um usuário específico pelo seu ID")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Usuário encontrado"),
-            @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
-    })
-    public ResponseEntity<UserResponseDTO> getById(
-            @Parameter(description = "ID do usuário") @PathVariable Long id) {
+    @Operation(summary = "Buscar usuário por ID")
+    public ResponseEntity<UserResponseDTO> getById(@PathVariable Long id) {
         User user = userService.findById(id);
         return ResponseEntity.ok(toDTO(user));
     }
 
     @PostMapping("/register")
-    @Operation(summary = "Registrar usuário", description = "Cria um novo usuário no sistema")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Usuário criado com sucesso"),
-            @ApiResponse(responseCode = "400", description = "Erro de validação")
-    })
-    public ResponseEntity<UserResponseDTO> register(
-            @Parameter(description = "Dados do usuário") @RequestBody UserRequestDTO requestDTO) {
-
+    @Operation(summary = "Registrar usuário", description = "Auto-cadastro de usuário (recebe cargo padrão USER)")
+    public ResponseEntity<UserResponseDTO> register(@RequestBody UserRequestDTO requestDTO) {
         User user = new User();
         user.setName(requestDTO.name());
         user.setEmail(requestDTO.email());
         user.setPassword(requestDTO.password());
-
         User savedUser = userService.register(user);
         return ResponseEntity.status(HttpStatus.CREATED).body(toDTO(savedUser));
     }
 
     @PostMapping
-    @Operation(summary = "Criar usuário (admin)", description = "Cria um novo usuário via API administrativa")
+    @Operation(summary = "Criar usuário (admin)", description = "Cria um novo usuário definindo o Cargo (Role)")
     public ResponseEntity<UserResponseDTO> create(@RequestBody UserRequestDTO requestDTO) {
         User user = new User();
         user.setName(requestDTO.name());
         user.setEmail(requestDTO.email());
         user.setPassword(requestDTO.password());
-
-        User savedUser = userService.createUser(user);
+        User savedUser = userService.createUser(user, requestDTO.roleId());
         return ResponseEntity.status(HttpStatus.CREATED).body(toDTO(savedUser));
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "Atualizar usuário", description = "Atualiza os dados de um usuário existente")
-    public ResponseEntity<UserResponseDTO> update(
-            @Parameter(description = "ID do usuário") @PathVariable Long id,
-            @RequestBody UserRequestDTO requestDTO) {
-
+    @Operation(summary = "Atualizar usuário")
+    public ResponseEntity<UserResponseDTO> update(@PathVariable Long id, @RequestBody UserRequestDTO requestDTO) {
         User user = new User();
         user.setName(requestDTO.name());
         user.setEmail(requestDTO.email());
         user.setPassword(requestDTO.password());
-
-        User updatedUser = userService.updateUser(id, user);
+        User updatedUser = userService.updateUser(id, user, requestDTO.roleId());
         return ResponseEntity.ok(toDTO(updatedUser));
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Excluir usuário", description = "Remove um usuário pelo seu ID")
+    @Operation(summary = "Excluir usuário (Soft Delete)")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
@@ -111,9 +91,7 @@ public class UserController {
 
     @PostMapping("/login")
     @Operation(summary = "Login de usuário", description = "Realiza login e retorna um token JWT")
-    public ResponseEntity<Map<String, Object>> login(
-            @RequestBody UserRequestDTO loginData) {
-
+    public ResponseEntity<Map<String, Object>> login(@RequestBody UserRequestDTO loginData) {
         User user = userService.login(loginData.email(), loginData.password());
         String token = jwtUtil.generateToken(user.getEmail());
 
@@ -121,7 +99,7 @@ public class UserController {
         response.put("token", token);
         response.put("userId", user.getId());
         response.put("name", user.getName());
-        response.put("role", user.getRole());
+        response.put("role", user.getRole() != null ? user.getRole().getName() : null);
 
         return ResponseEntity.ok(response);
     }
@@ -131,8 +109,9 @@ public class UserController {
                 user.getId(),
                 user.getName(),
                 user.getEmail(),
-                user.getRole(),
-                user.getActive()
+                user.getIsActive(),
+                user.getRole() != null ? user.getRole().getId() : null,
+                user.getRole() != null ? user.getRole().getName() : null
         );
     }
 }

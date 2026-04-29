@@ -1,31 +1,52 @@
 package com.pina.mkt_api.entities;
 
-import com.pina.mkt_api.enums.Role;
 import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
-@Table(name = "users")
+@Table(name = "`USER`")
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(length = 100)
     private String name;
 
-    @Column(nullable = false, unique = true)
+    @Column(length = 150, unique = true)
     private String email;
 
-    @Column(nullable = false)
+    @Column(length = 255)
     private String password;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "avatar_url", length = 500)
+    private String avatarUrl;
+
+    @Column(name = "is_active")
+    private Boolean isActive = true;
+
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @ManyToOne
+    @JoinColumn(name = "Role_id")
     private Role role;
 
-    @Column(nullable = false)
-    private Boolean active = true;
+    @ManyToMany(mappedBy = "users")
+    private List<Board> boards;
+
+    @ManyToMany(mappedBy = "assignedUsers")
+    private List<Card> cards;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -39,9 +60,24 @@ public class User {
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
 
+    public String getAvatarUrl() { return avatarUrl; }
+    public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
+
+    public Boolean getIsActive() { return isActive; }
+    public void setIsActive(Boolean isActive) { this.isActive = isActive; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+
     public Role getRole() { return role; }
     public void setRole(Role role) { this.role = role; }
 
-    public Boolean getActive() { return active; }
-    public void setActive(Boolean active) { this.active = active; }
+    public List<Board> getBoards() { return boards; }
+    public void setBoards(List<Board> boards) { this.boards = boards; }
+
+    public List<Card> getCards() { return cards; }
+    public void setCards(List<Card> cards) { this.cards = cards; }
 }

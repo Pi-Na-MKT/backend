@@ -8,38 +8,44 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
-@Table(name = "boards")
+@Table(name = "BOARD")
 public class Board {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 100)
+    @Column(length = 100)
     private String name;
 
     @Column(length = 500)
     private String description;
 
-    @Column(name = "background_color", length = 20)
+    @Column(name = "background_color", length = 7)
     private String backgroundColor;
 
-    @Column(nullable = false)
-    private Boolean active = true;
+    @Column(name = "is_active")
+    private Boolean isActive = true;
 
     @CreationTimestamp
-    @Column(updatable = false)
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
     @UpdateTimestamp
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
     @ManyToOne
-    @JoinColumn(name = "company_id", nullable = false)
+    @JoinColumn(name = "Company_id")
     private Company company;
 
-    @ManyToOne
-    private User user;
+    @ManyToMany
+    @JoinTable(
+            name = "BOARD_USER",
+            joinColumns = @JoinColumn(name = "board_id"),
+            inverseJoinColumns = @JoinColumn(name = "user_id")
+    )
+    private List<User> users;
 
     @OneToMany(mappedBy = "board", cascade = CascadeType.ALL)
     private List<BoardColumn> columns;
@@ -56,8 +62,8 @@ public class Board {
     public String getBackgroundColor() { return backgroundColor; }
     public void setBackgroundColor(String backgroundColor) { this.backgroundColor = backgroundColor; }
 
-    public Boolean getActive() { return active; }
-    public void setActive(Boolean active) { this.active = active; }
+    public Boolean getIsActive() { return isActive; }
+    public void setIsActive(Boolean isActive) { this.isActive = isActive; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
@@ -68,8 +74,8 @@ public class Board {
     public Company getCompany() { return company; }
     public void setCompany(Company company) { this.company = company; }
 
-    public User getUser() { return user; }
-    public void setUser(User user) { this.user = user; }
+    public List<User> getUsers() { return users; }
+    public void setUsers(List<User> users) { this.users = users; }
 
     public List<BoardColumn> getColumns() { return columns; }
     public void setColumns(List<BoardColumn> columns) { this.columns = columns; }

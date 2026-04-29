@@ -10,6 +10,9 @@ public record UserRequestDTO(
         String email,
 
         @Schema(description = "Senha de acesso", example = "123456")
-        String password
+        String password,
+
+        @Schema(description = "ID do Perfil/Cargo (Apenas para criação via Admin)", example = "1")
+        Long roleId
 ) {
 }

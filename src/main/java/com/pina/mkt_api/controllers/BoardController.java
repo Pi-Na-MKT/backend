@@ -3,6 +3,7 @@ package com.pina.mkt_api.controllers;
 import com.pina.mkt_api.dtos.BoardDTOs.BoardRequestDTO;
 import com.pina.mkt_api.dtos.BoardDTOs.BoardResponseDTO;
 import com.pina.mkt_api.entities.Board;
+import com.pina.mkt_api.entities.User;
 import com.pina.mkt_api.services.BoardService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -17,7 +18,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/boards")
 @CrossOrigin(origins = "*")
-@Tag(name = "Boards", description = "Gerenciamento de boards")
+@Tag(name = "Boards", description = "Gerenciamento de boards e seus membros")
 public class BoardController {
 
     private final BoardService service;
@@ -27,7 +28,7 @@ public class BoardController {
     }
 
     @PostMapping("/company/{companyId}")
-    @Operation(summary = "Criar board", description = "Cria um novo board associado a uma empresa")
+    @Operation(summary = "Criar board", description = "Cria um novo board associado a uma empresa e adiciona membros")
     public ResponseEntity<BoardResponseDTO> create(
             @Parameter(description = "ID da Empresa (Company)") @PathVariable Long companyId,
             @RequestBody BoardRequestDTO requestDTO) {
@@ -36,9 +37,9 @@ public class BoardController {
         board.setName(requestDTO.name());
         board.setDescription(requestDTO.description());
         board.setBackgroundColor(requestDTO.backgroundColor());
-        board.setActive(requestDTO.active() != null ? requestDTO.active() : true);
+        board.setIsActive(requestDTO.isActive() != null ? requestDTO.isActive() : true);
 
-        Board savedBoard = service.create(companyId, board);
+        Board savedBoard = service.create(companyId, board, requestDTO.userIds());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(toDTO(savedBoard));
     }
@@ -53,16 +54,48 @@ public class BoardController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/{id}")
+    @Operation(summary = "Buscar board por ID", description = "Retorna os detalhes de um board específico")
+    public ResponseEntity<BoardResponseDTO> getById(@PathVariable Long id) {
+        Board board = service.findById(id);
+        return ResponseEntity.ok(toDTO(board));
+    }
+
+    @PutMapping("/{id}")
+    @Operation(summary = "Atualizar board", description = "Atualiza os dados e os membros de um board")
+    public ResponseEntity<BoardResponseDTO> update(
+            @PathVariable Long id,
+            @RequestBody BoardRequestDTO requestDTO) {
+
+        Board boardDetails = new Board();
+        boardDetails.setName(requestDTO.name());
+        boardDetails.setDescription(requestDTO.description());
+        boardDetails.setBackgroundColor(requestDTO.backgroundColor());
+        boardDetails.setIsActive(requestDTO.isActive());
+
+        Board updatedBoard = service.update(id, boardDetails, requestDTO.userIds());
+        return ResponseEntity.ok(toDTO(updatedBoard));
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Excluir board", description = "Remove um board pelo seu ID")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        service.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+
     private BoardResponseDTO toDTO(Board board) {
         return new BoardResponseDTO(
                 board.getId(),
                 board.getName(),
                 board.getDescription(),
                 board.getBackgroundColor(),
-                board.getActive(),
+                board.getIsActive(),
                 board.getCreatedAt(),
                 board.getUpdatedAt(),
-                board.getCompany() != null ? board.getCompany().getId() : null // Devolve o ID da empresa de forma segura!
+                board.getCompany() != null ? board.getCompany().getId() : null,
+                board.getUsers() != null ?
+                        board.getUsers().stream().map(User::getId).collect(Collectors.toList()) : null
         );
     }
 }

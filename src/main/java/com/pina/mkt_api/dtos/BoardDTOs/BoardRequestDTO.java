@@ -1,6 +1,7 @@
 package com.pina.mkt_api.dtos.BoardDTOs;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.List;
 
 public record BoardRequestDTO(
         @Schema(description = "Nome do board", example = "Projeto Marketing")
@@ -13,6 +14,9 @@ public record BoardRequestDTO(
         String backgroundColor,
 
         @Schema(description = "Status do quadro", example = "true")
-        Boolean active
+        Boolean isActive,
+
+        @Schema(description = "Lista de IDs dos usuários membros deste quadro")
+        List<Long> userIds
 ) {
 }
