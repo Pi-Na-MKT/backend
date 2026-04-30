@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -38,7 +39,7 @@ public class CardController {
     })
     public ResponseEntity<CardResponseDTO> createCard(
             @Parameter(description = "ID da coluna onde o card vai nascer") @PathVariable Long columnId,
-            @RequestBody CardRequestDTO requestDTO) {
+            @Valid @RequestBody CardRequestDTO requestDTO) {
 
         Card card = new Card();
         updateEntityFromDTO(card, requestDTO);
@@ -66,7 +67,9 @@ public class CardController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Atualizar card", description = "Atualiza os dados de um card existente")
-    public ResponseEntity<CardResponseDTO> updateCard(@PathVariable Long id, @RequestBody CardRequestDTO requestDTO) {
+    public ResponseEntity<CardResponseDTO> updateCard(
+            @PathVariable Long id,
+            @Valid @RequestBody CardRequestDTO requestDTO) {
         Card cardDetails = new Card();
         updateEntityFromDTO(cardDetails, requestDTO);
 

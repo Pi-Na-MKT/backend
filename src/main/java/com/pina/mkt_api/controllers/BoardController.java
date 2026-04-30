@@ -8,6 +8,7 @@ import com.pina.mkt_api.services.BoardService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -31,7 +32,7 @@ public class BoardController {
     @Operation(summary = "Criar board", description = "Cria um novo board associado a uma empresa e adiciona membros")
     public ResponseEntity<BoardResponseDTO> create(
             @Parameter(description = "ID da Empresa (Company)") @PathVariable Long companyId,
-            @RequestBody BoardRequestDTO requestDTO) {
+            @Valid @RequestBody BoardRequestDTO requestDTO) {
 
         Board board = new Board();
         board.setName(requestDTO.name());
@@ -65,7 +66,7 @@ public class BoardController {
     @Operation(summary = "Atualizar board", description = "Atualiza os dados e os membros de um board")
     public ResponseEntity<BoardResponseDTO> update(
             @PathVariable Long id,
-            @RequestBody BoardRequestDTO requestDTO) {
+            @Valid @RequestBody BoardRequestDTO requestDTO) {
 
         Board boardDetails = new Board();
         boardDetails.setName(requestDTO.name());

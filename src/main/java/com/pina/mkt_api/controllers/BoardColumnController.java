@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -37,7 +38,7 @@ public class BoardColumnController {
     })
     public ResponseEntity<BoardColumnResponseDTO> create(
             @Parameter(description = "ID do board onde a coluna será criada") @PathVariable Long boardId,
-            @Parameter(description = "Dados da coluna") @RequestBody BoardColumnRequestDTO requestDTO) {
+            @Parameter(description = "Dados da coluna") @Valid @RequestBody BoardColumnRequestDTO requestDTO) {
 
         BoardColumn column = new BoardColumn();
         column.setName(requestDTO.name());

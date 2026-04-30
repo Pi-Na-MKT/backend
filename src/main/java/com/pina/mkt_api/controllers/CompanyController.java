@@ -6,6 +6,7 @@ import com.pina.mkt_api.entities.Company;
 import com.pina.mkt_api.services.CompanyService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,7 +28,8 @@ public class CompanyController {
 
     @PostMapping
     @Operation(summary = "Criar empresa", description = "Cadastra uma nova empresa no sistema")
-    public ResponseEntity<CompanyResponseDTO> create(@RequestBody CompanyRequestDTO requestDTO) {
+    public ResponseEntity<CompanyResponseDTO> create(
+            @Valid @RequestBody CompanyRequestDTO requestDTO) {
         Company company = new Company();
         company.setName(requestDTO.name());
         company.setSlug(requestDTO.slug());
@@ -55,7 +57,9 @@ public class CompanyController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Atualizar empresa", description = "Atualiza os dados de uma empresa existente")
-    public ResponseEntity<CompanyResponseDTO> update(@PathVariable Long id, @RequestBody CompanyRequestDTO requestDTO) {
+    public ResponseEntity<CompanyResponseDTO> update(
+            @PathVariable Long id,
+            @Valid @RequestBody CompanyRequestDTO requestDTO) {
         Company company = new Company();
         company.setName(requestDTO.name());
         company.setSlug(requestDTO.slug());

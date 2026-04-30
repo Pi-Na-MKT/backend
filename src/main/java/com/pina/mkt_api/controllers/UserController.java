@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -51,7 +52,8 @@ public class UserController {
 
     @PostMapping("/register")
     @Operation(summary = "Registrar usuário", description = "Auto-cadastro de usuário (recebe cargo padrão USER)")
-    public ResponseEntity<UserResponseDTO> register(@RequestBody UserRequestDTO requestDTO) {
+    public ResponseEntity<UserResponseDTO> register(
+            @Valid @RequestBody UserRequestDTO requestDTO) {
 
         User savedUser = userService.register(requestDTO);
 
@@ -62,7 +64,8 @@ public class UserController {
 
     @PostMapping
     @Operation(summary = "Criar usuário (admin)", description = "Cria um novo usuário definindo o Cargo (Role)")
-    public ResponseEntity<UserResponseDTO> create(@RequestBody UserRequestDTO requestDTO) {
+    public ResponseEntity<UserResponseDTO> create(
+            @Valid @RequestBody UserRequestDTO requestDTO) {
 
         User user = new User();
         user.setName(requestDTO.name());
@@ -87,7 +90,7 @@ public class UserController {
     @Operation(summary = "Atualizar usuário")
     public ResponseEntity<UserResponseDTO> update(
             @PathVariable Long id,
-            @RequestBody UserRequestDTO requestDTO) {
+            @Valid @RequestBody UserRequestDTO requestDTO) {
 
         User user = new User();
 
@@ -116,7 +119,8 @@ public class UserController {
 
     @PostMapping("/login")
     @Operation(summary = "Login de usuário", description = "Realiza login e retorna um token JWT")
-    public ResponseEntity<Map<String, Object>> login(@RequestBody UserRequestDTO loginData) {
+    public ResponseEntity<Map<String, Object>> login(
+            @Valid @RequestBody UserRequestDTO loginData) {
         User user = userService.login(loginData.email(), loginData.password());
         String token = jwtUtil.generateToken(user.getEmail());
 
