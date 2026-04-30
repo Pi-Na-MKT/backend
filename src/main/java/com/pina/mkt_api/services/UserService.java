@@ -1,5 +1,6 @@
 package com.pina.mkt_api.services;
 
+import com.pina.mkt_api.dtos.UserDTOs.UserRequestDTO;
 import com.pina.mkt_api.entities.Role;
 import com.pina.mkt_api.entities.User;
 import com.pina.mkt_api.exceptions.BusinessRuleException;
@@ -27,20 +28,37 @@ public class UserService {
 
     public User findById(Long id) {
         return userRepository.findById(id)
-                .filter(User::getIsActive)
+                .filter(User::getActive)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
     }
 
-    public User register(User user) {
-        if (userRepository.findByEmail(user.getEmail()).isPresent()) {
-            throw new BusinessRuleException("Email já está em uso.");
+    public User register(UserRequestDTO request) {
+
+        if (userRepository.findByEmail(request.email()).isPresent()) {
+            throw new BusinessRuleException("Este e-mail já está em uso.");
         }
 
-        Role defaultRole = roleRepository.findByName("USER")
-                .orElseThrow(() -> new BusinessRuleException("Cargo padrão 'USER' não configurado no banco de dados."));
+        User user = new User();
 
-        user.setRole(defaultRole);
-        user.setIsActive(true);
+        user.setName(request.name());
+        user.setEmail(request.email());
+        user.setPassword(request.password());
+
+        user.setPhone(request.phone());
+        user.setJobTitle(request.jobTitle());
+        user.setDepartment(request.department());
+        user.setSeniority(request.seniority());
+
+        user.setResponsibility(request.responsibility());
+        user.setBio(request.bio());
+        user.setLinkedin(request.linkedin());
+
+        Role role = roleRepository
+                .findByName(request.role() != null ? request.role().toUpperCase() : "USER")
+                .orElseGet(() -> roleRepository.findByName("USER")
+                        .orElseThrow(() -> new RuntimeException("Cadastre a role USER no banco")));
+
+        user.setRole(role);
 
         return userRepository.save(user);
     }
@@ -58,7 +76,7 @@ public class UserService {
                 .orElseThrow(() -> new ResourceNotFoundException("Perfil não encontrado com o ID fornecido."));
 
         user.setRole(role);
-        user.setIsActive(true);
+        user.setActive(true);
 
         return userRepository.save(user);
     }
@@ -86,7 +104,7 @@ public class UserService {
 
     public void deleteUser(Long id) {
         User user = findById(id);
-        user.setIsActive(false);
+        user.setActive(false);
         userRepository.save(user);
     }
 
@@ -98,7 +116,7 @@ public class UserService {
             throw new BusinessRuleException("Senha incorreta.");
         }
 
-        if (!user.getIsActive()) {
+        if (!user.getActive()) {
             throw new BusinessRuleException("Usuário desativado.");
         }
 

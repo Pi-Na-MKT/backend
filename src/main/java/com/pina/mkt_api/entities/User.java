@@ -38,6 +38,27 @@ public class User {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(length = 20)
+    private String phone;
+
+    @Column(name = "job_title")
+    private String jobTitle;
+
+    @Column(name = "seniority")
+    private String seniority;
+
+    @Column(name = "department")
+    private String department;
+
+    @Column(columnDefinition = "TEXT")
+    private String responsibility;
+
+    @Column(length = 500)
+    private String bio;
+
+    @Column(length = 255)
+    private String linkedin;
+
     @ManyToOne
     @JoinColumn(name = "Role_id")
     private Role role;
@@ -48,36 +69,129 @@ public class User {
     @ManyToMany(mappedBy = "assignedUsers")
     private List<Card> cards;
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
+    public String getName() {
+        return name;
+    }
+    public void setName(String name) {
+        this.name = name;
+    }
 
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
+    public String getEmail() {
+        return email;
+    }
+    public void setEmail(String email) {
+        this.email = email;
+    }
 
-    public String getPassword() { return password; }
-    public void setPassword(String password) { this.password = password; }
+    public String getPassword() {
+        return password;
+    }
+    public void setPassword(String password) {
+        this.password = password;
+    }
 
-    public String getAvatarUrl() { return avatarUrl; }
-    public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
+    public String getAvatarUrl() {
+        return avatarUrl;
+    }
+    public void setAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
+    }
 
-    public Boolean getIsActive() { return isActive; }
-    public void setIsActive(Boolean isActive) { this.isActive = isActive; }
+    public Boolean getActive() {
+        return isActive;
+    }
+    public void setActive(Boolean active) {
+        isActive = active;
+    }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
 
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
 
-    public Role getRole() { return role; }
-    public void setRole(Role role) { this.role = role; }
+    public String getPhone() {
+        return phone;
+    }
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
 
-    public List<Board> getBoards() { return boards; }
-    public void setBoards(List<Board> boards) { this.boards = boards; }
+    public String getJobTitle() {
+        return jobTitle;
+    }
+    public void setJobTitle(String jobTitle) {
+        this.jobTitle = jobTitle;
+    }
 
-    public List<Card> getCards() { return cards; }
-    public void setCards(List<Card> cards) { this.cards = cards; }
+    public String getSeniority() {
+        return seniority;
+    }
+    public void setSeniority(String seniority) {
+        this.seniority = seniority;
+    }
+
+    public String getDepartment() {
+        return department;
+    }
+    public void setDepartment(String department) {
+        this.department = department;
+    }
+
+    public String getResponsibility() {
+        return responsibility;
+    }
+    public void setResponsibility(String responsibility) {
+        this.responsibility = responsibility;
+    }
+
+    public String getBio() {
+        return bio;
+    }
+    public void setBio(String bio) {
+        this.bio = bio;
+    }
+
+    public String getLinkedin() {
+        return linkedin;
+    }
+    public void setLinkedin(String linkedin) {
+        this.linkedin = linkedin;
+    }
+
+    public Role getRole() {
+        return role;
+    }
+    public void setRole(Role role) {
+        this.role = role;
+    }
+
+    public List<Board> getBoards() {
+        return boards;
+    }
+    public void setBoards(List<Board> boards) {
+        this.boards = boards;
+    }
+
+    public List<Card> getCards() {
+        return cards;
+    }
+    public void setCards(List<Card> cards) {
+        this.cards = cards;
+    }
 }

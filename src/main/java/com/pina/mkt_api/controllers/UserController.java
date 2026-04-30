@@ -52,33 +52,58 @@ public class UserController {
     @PostMapping("/register")
     @Operation(summary = "Registrar usuário", description = "Auto-cadastro de usuário (recebe cargo padrão USER)")
     public ResponseEntity<UserResponseDTO> register(@RequestBody UserRequestDTO requestDTO) {
-        User user = new User();
-        user.setName(requestDTO.name());
-        user.setEmail(requestDTO.email());
-        user.setPassword(requestDTO.password());
-        User savedUser = userService.register(user);
-        return ResponseEntity.status(HttpStatus.CREATED).body(toDTO(savedUser));
+
+        User savedUser = userService.register(requestDTO);
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(toDTO(savedUser));
     }
 
     @PostMapping
     @Operation(summary = "Criar usuário (admin)", description = "Cria um novo usuário definindo o Cargo (Role)")
     public ResponseEntity<UserResponseDTO> create(@RequestBody UserRequestDTO requestDTO) {
+
         User user = new User();
         user.setName(requestDTO.name());
         user.setEmail(requestDTO.email());
         user.setPassword(requestDTO.password());
+
+        user.setPhone(requestDTO.phone());
+        user.setJobTitle(requestDTO.jobTitle());
+        user.setDepartment(requestDTO.department());
+        user.setSeniority(requestDTO.seniority());
+
+        user.setResponsibility(requestDTO.responsibility());
+        user.setBio(requestDTO.bio());
+        user.setLinkedin(requestDTO.linkedin());
+
         User savedUser = userService.createUser(user, requestDTO.roleId());
+
         return ResponseEntity.status(HttpStatus.CREATED).body(toDTO(savedUser));
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "Atualizar usuário")
-    public ResponseEntity<UserResponseDTO> update(@PathVariable Long id, @RequestBody UserRequestDTO requestDTO) {
+    public ResponseEntity<UserResponseDTO> update(
+            @PathVariable Long id,
+            @RequestBody UserRequestDTO requestDTO) {
+
         User user = new User();
+
         user.setName(requestDTO.name());
         user.setEmail(requestDTO.email());
         user.setPassword(requestDTO.password());
+        user.setPhone(requestDTO.phone());
+        user.setJobTitle(requestDTO.jobTitle());
+        user.setDepartment(requestDTO.department());
+        user.setSeniority(requestDTO.seniority());
+        user.setResponsibility(requestDTO.responsibility());
+        user.setBio(requestDTO.bio());
+        user.setLinkedin(requestDTO.linkedin());
+
         User updatedUser = userService.updateUser(id, user, requestDTO.roleId());
+
         return ResponseEntity.ok(toDTO(updatedUser));
     }
 
@@ -109,9 +134,15 @@ public class UserController {
                 user.getId(),
                 user.getName(),
                 user.getEmail(),
-                user.getIsActive(),
-                user.getRole() != null ? user.getRole().getId() : null,
-                user.getRole() != null ? user.getRole().getName() : null
+                user.getPhone(),
+                user.getJobTitle(),
+                user.getSeniority(),
+                user.getDepartment(),
+                user.getRole() != null ? user.getRole().getName() : null,
+                user.getAvatarUrl(),
+                user.getBio(),
+                user.getResponsibility(),
+                user.getLinkedin()
         );
     }
 }
