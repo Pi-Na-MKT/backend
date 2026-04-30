@@ -31,6 +31,25 @@ public class Role {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    // ✅ obrigatório pro JPA
+    public Role() {}
+
+    // ✅ construtor útil pro seed
+    public Role(String name, String accessKey, String description) {
+        this.name = name;
+        this.accessKey = accessKey;
+        this.description = description;
+    }
+
+    public Role(Long id, String name, String accessKey, String description, LocalDateTime createdAt, LocalDateTime updatedAt) {
+        this.id = id;
+        this.name = name;
+        this.accessKey = accessKey;
+        this.description = description;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
