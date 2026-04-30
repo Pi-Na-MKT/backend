@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/companies")
 @CrossOrigin(origins = "*")
-@Tag(name = "Companies", description = "Gerenciamento de empresas clientes")
+@Tag(name = "2 - Companies", description = "Gerenciamento de empresas clientes")
 public class CompanyController {
 
     private final CompanyService service;

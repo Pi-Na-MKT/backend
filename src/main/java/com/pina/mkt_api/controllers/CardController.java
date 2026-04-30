@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/cards")
 @CrossOrigin(origins = "*")
-@Tag(name = "Cards", description = "Gerenciamento de cards e tarefas")
+@Tag(name = "5 - Cards", description = "Gerenciamento de cards e tarefas")
 public class CardController {
 
     private final CardService cardService;

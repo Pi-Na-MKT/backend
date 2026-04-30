@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/boards")
 @CrossOrigin(origins = "*")
-@Tag(name = "Boards", description = "Gerenciamento de boards e seus membros")
+@Tag(name = "3 - Boards", description = "Gerenciamento de boards e seus membros")
 public class BoardController {
 
     private final BoardService service;

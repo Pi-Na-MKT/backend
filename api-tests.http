@@ -1,0 +1,248 @@
+### CONFIG
+@baseUrl = http://localhost:8080
+@token =
+
+#################################################
+### 🔹 1. REGISTER USER
+#################################################
+
+POST {{baseUrl}}/api/users/register
+Content-Type: application/json
+
+{
+  "name": "Andre Boer",
+  "email": "andre@email.com",
+  "password": "123456",
+  "phone": "11999999999",
+  "jobTitle": "Dev",
+  "department": "TI",
+  "seniority": "junior",
+  "role": "USER",
+  "responsibility": "Desenvolver API",
+  "bio": "Backend dev",
+  "linkedin": "linkedin.com/in/andre"
+}
+
+###
+
+#################################################
+### 🔹 2. LOGIN (CAPTURA TOKEN)
+#################################################
+
+POST {{baseUrl}}/api/users/login
+Content-Type: application/json
+
+{
+  "email": "andre@email.com",
+  "password": "123456"
+}
+
+> {% client.global.set("token", response.body.token); %}
+
+###
+
+#################################################
+### 🔥 TESTE SEM TOKEN (DEVE FALHAR)
+#################################################
+
+POST {{baseUrl}}/api/companies
+Content-Type: application/json
+
+{
+  "name": "Empresa Fail",
+  "slug": "empresa-fail"
+}
+
+###
+
+#################################################
+### 🔹 3. COMPANY (COM TOKEN)
+#################################################
+
+POST {{baseUrl}}/api/companies
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Empresa Teste",
+  "slug": "empresa-teste",
+  "active": true
+}
+
+###
+
+GET {{baseUrl}}/api/companies
+Authorization: Bearer {{token}}
+
+###
+
+GET {{baseUrl}}/api/companies/1
+Authorization: Bearer {{token}}
+
+###
+
+#################################################
+### 🔹 4. BOARD
+#################################################
+
+POST {{baseUrl}}/api/boards/company/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Board Marketing",
+  "description": "Gestão de campanhas",
+  "backgroundColor": "#FFFFFF",
+  "isActive": true,
+  "userIds": [1]
+}
+
+###
+
+GET {{baseUrl}}/api/boards
+Authorization: Bearer {{token}}
+
+###
+
+GET {{baseUrl}}/api/boards/1
+Authorization: Bearer {{token}}
+
+###
+
+#################################################
+### 🔹 5. COLUMN
+#################################################
+
+POST {{baseUrl}}/api/columns/board/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "A Fazer",
+  "position": 1
+}
+
+###
+
+GET {{baseUrl}}/api/columns/board/1
+Authorization: Bearer {{token}}
+
+###
+
+#################################################
+### 🔹 6. CARD
+#################################################
+
+POST {{baseUrl}}/api/cards/column/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "title": "Criar campanha",
+  "description": "Instagram Ads",
+  "priority": "HIGH",
+  "position": 1,
+  "isActive": true,
+  "assignedUserIds": [1]
+}
+
+###
+
+GET {{baseUrl}}/api/cards
+Authorization: Bearer {{token}}
+
+###
+
+GET {{baseUrl}}/api/cards/1
+Authorization: Bearer {{token}}
+
+###
+
+#################################################
+### 🔄 UPDATE TESTS
+#################################################
+
+PUT {{baseUrl}}/api/boards/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Board Atualizado",
+  "description": "Nova descrição",
+  "backgroundColor": "#000000",
+  "isActive": true,
+  "userIds": [1]
+}
+
+###
+
+PUT {{baseUrl}}/api/cards/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "title": "Card Atualizado",
+  "priority": "LOW",
+  "position": 2
+}
+
+###
+
+#################################################
+### 🗑 DELETE TESTS
+#################################################
+
+DELETE {{baseUrl}}/api/cards/1
+Authorization: Bearer {{token}}
+
+###
+
+DELETE {{baseUrl}}/api/columns/1
+Authorization: Bearer {{token}}
+
+###
+
+DELETE {{baseUrl}}/api/boards/1
+Authorization: Bearer {{token}}
+
+###
+
+DELETE {{baseUrl}}/api/companies/1
+Authorization: Bearer {{token}}
+
+###
+
+#################################################
+### ❌ TESTES DE ERRO
+#################################################
+
+### Token inválido
+GET {{baseUrl}}/api/boards
+Authorization: Bearer token_invalido
+
+###
+
+### Payload inválido
+POST {{baseUrl}}/api/cards/column/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "title": "",
+  "priority": "INVALID",
+  "position": "abc"
+}
+
+###
+
+### JSON quebrado
+POST {{baseUrl}}/api/companies
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Teste",
+  "slug":
+}
+
+###

@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/columns")
 @CrossOrigin(origins = "*")
-@Tag(name = "Board Columns", description = "Gerenciamento de colunas do board")
+@Tag(name = "4 - Board Columns", description = "Gerenciamento de colunas do board")
 public class BoardColumnController {
 
     private final BoardColumnService service;
