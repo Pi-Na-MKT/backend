@@ -93,6 +93,13 @@ public class UserService {
         if (updatedUser.getName() != null) user.setName(updatedUser.getName());
         if (updatedUser.getEmail() != null) user.setEmail(updatedUser.getEmail());
         if (updatedUser.getPassword() != null) user.setPassword(updatedUser.getPassword());
+        if (updatedUser.getJobTitle() != null) user.setJobTitle(updatedUser.getJobTitle());
+        if (updatedUser.getDepartment() != null) user.setDepartment(updatedUser.getDepartment());
+        if (updatedUser.getPhone() != null) user.setPhone(updatedUser.getPhone());
+        if (updatedUser.getSeniority() != null) user.setSeniority(updatedUser.getSeniority());
+        if (updatedUser.getResponsibility() != null) user.setResponsibility(updatedUser.getResponsibility());
+        if (updatedUser.getBio() != null) user.setBio(updatedUser.getBio());
+        if (updatedUser.getLinkedin() != null) user.setLinkedin(updatedUser.getLinkedin());
         if (roleId != null) {
             Role role = roleRepository.findById(roleId)
                     .orElseThrow(() -> new ResourceNotFoundException("Perfil não encontrado."));
@@ -103,7 +110,8 @@ public class UserService {
     }
 
     public void deleteUser(Long id) {
-        User user = findById(id);
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
         user.setActive(false);
         userRepository.save(user);
     }
