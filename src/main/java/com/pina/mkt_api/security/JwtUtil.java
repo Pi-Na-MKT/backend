@@ -14,12 +14,12 @@ public class JwtUtil {
     private static final String SECRET_STRING = "PiNaProjetoFaculdadeChaveSuperSecreta2026!!!";
     private final Key SECRET_KEY = Keys.hmacShaKeyFor(SECRET_STRING.getBytes());
 
-    // Tempo de validade do Token: 2 horas
     private final long EXPIRATION_TIME = 1000 * 60 * 60 * 2;
 
-    public String generateToken(String email) {
+    public String generateToken(String email, String role) {
         return Jwts.builder()
                 .setSubject(email)
+                .claim("role", role)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
                 .signWith(SECRET_KEY, SignatureAlgorithm.HS256)
@@ -28,6 +28,10 @@ public class JwtUtil {
 
     public String extractEmail(String token) {
         return extractAllClaims(token).getSubject();
+    }
+
+    public String extractRole(String token) {
+        return extractAllClaims(token).get("role", String.class);
     }
 
     public boolean isTokenValid(String token, String email) {
@@ -40,10 +44,6 @@ public class JwtUtil {
     }
 
     private Claims extractAllClaims(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(SECRET_KEY)
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
+        return Jwts.parserBuilder().setSigningKey(SECRET_KEY).build().parseClaimsJws(token).getBody();
     }
 }

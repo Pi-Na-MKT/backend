@@ -1,5 +1,6 @@
 package com.pina.mkt_api.dtos.CardDTOs;
 
+import com.pina.mkt_api.dtos.UserDTOs.UserSummaryDTO;
 import com.pina.mkt_api.enums.Priority;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -15,6 +16,6 @@ public record CardResponseDTO(
         LocalDateTime updatedAt,
         LocalDateTime dueDate,
         Long columnId,
-        List<Long> assignedUserIds
+        List<UserSummaryDTO> assignedUsers
 ) {
 }

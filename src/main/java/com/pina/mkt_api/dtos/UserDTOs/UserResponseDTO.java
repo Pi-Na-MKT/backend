@@ -1,7 +1,6 @@
 package com.pina.mkt_api.dtos.UserDTOs;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import java.util.List;
 
 public record UserResponseDTO(
 
@@ -23,9 +22,6 @@ public record UserResponseDTO(
         @Schema(description = "Senioridade")
         String seniority,
 
-        @Schema(description = "Departamento")
-        String department,
-
         @Schema(description = "Perfil de acesso")
         String role,
 
@@ -40,4 +36,5 @@ public record UserResponseDTO(
 
         @Schema(description = "LinkedIn")
         String linkedin
-) {}
+) {
+}

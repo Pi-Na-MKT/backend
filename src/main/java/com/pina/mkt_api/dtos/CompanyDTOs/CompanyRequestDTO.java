@@ -18,4 +18,5 @@ public record CompanyRequestDTO(
 
         @Schema(description = "Status da empresa", example = "true")
         Boolean active
-) {}
+) {
+}

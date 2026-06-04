@@ -2,6 +2,7 @@ package com.pina.mkt_api.controllers;
 
 import com.pina.mkt_api.dtos.BoardColumnDTOs.BoardColumnRequestDTO;
 import com.pina.mkt_api.dtos.BoardColumnDTOs.BoardColumnResponseDTO;
+import com.pina.mkt_api.dtos.BoardColumnDTOs.BoardColumnUpdateDTO;
 import com.pina.mkt_api.entities.BoardColumn;
 import com.pina.mkt_api.services.BoardColumnService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -12,6 +13,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -30,11 +32,12 @@ public class BoardColumnController {
     }
 
     @PostMapping("/board/{boardId}")
-    @Operation(summary = "Criar coluna", description = "Cria uma nova coluna em um board")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_MANAGER')")
+    @Operation(summary = "Criar coluna", description = "Cria uma nova coluna em um board. Requer papel ADMIN ou GESTOR.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Coluna criada com sucesso"),
             @ApiResponse(responseCode = "400", description = "Erro de validação"),
-            @ApiResponse(responseCode = "401", description = "Não autorizado")
+            @ApiResponse(responseCode = "403", description = "Acesso negado")
     })
     public ResponseEntity<BoardColumnResponseDTO> create(
             @Parameter(description = "ID do board onde a coluna será criada") @PathVariable Long boardId,
@@ -45,7 +48,6 @@ public class BoardColumnController {
         column.setPosition(requestDTO.position());
 
         BoardColumn savedColumn = service.create(boardId, column);
-
         return ResponseEntity.status(HttpStatus.CREATED).body(toDTO(savedColumn));
     }
 
@@ -61,20 +63,37 @@ public class BoardColumnController {
         List<BoardColumnResponseDTO> response = service.getByBoard(boardId).stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
-
         return ResponseEntity.ok(response);
     }
 
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_MANAGER')")
+    @Operation(summary = "Atualizar coluna", description = "Atualiza o nome e/ou a posição de uma coluna. Requer papel ADMIN ou GESTOR.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Coluna atualizada com sucesso"),
+            @ApiResponse(responseCode = "400", description = "Erro de validação"),
+            @ApiResponse(responseCode = "403", description = "Acesso negado"),
+            @ApiResponse(responseCode = "404", description = "Coluna não encontrada")
+    })
+    public ResponseEntity<BoardColumnResponseDTO> update(
+            @Parameter(description = "ID da coluna a ser atualizada") @PathVariable Long id,
+            @Valid @RequestBody BoardColumnUpdateDTO updateDTO) {
+
+        BoardColumn updatedColumn = service.updateColumn(id, updateDTO);
+        return ResponseEntity.ok(toDTO(updatedColumn));
+    }
+
     @DeleteMapping("/{id}")
-    @Operation(summary = "Excluir coluna", description = "Remove uma coluna pelo seu ID")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_MANAGER')")
+    @Operation(summary = "Excluir coluna", description = "Remove uma coluna. Requer papel ADMIN ou GESTOR.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Coluna removida com sucesso"),
+            @ApiResponse(responseCode = "403", description = "Acesso negado"),
             @ApiResponse(responseCode = "404", description = "Coluna não encontrada")
     })
     public ResponseEntity<Void> delete(
             @Parameter(description = "ID da coluna a ser removida") @PathVariable Long id) {
         service.deleteColumn(id);
-
         return ResponseEntity.noContent().build();
     }
 

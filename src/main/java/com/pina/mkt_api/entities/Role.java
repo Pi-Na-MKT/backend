@@ -31,10 +31,8 @@ public class Role {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    // ✅ obrigatório pro JPA
     public Role() {}
 
-    // ✅ construtor útil pro seed
     public Role(String name, String accessKey, String description) {
         this.name = name;
         this.accessKey = accessKey;
