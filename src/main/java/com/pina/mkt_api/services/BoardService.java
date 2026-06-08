@@ -7,6 +7,7 @@ import com.pina.mkt_api.exceptions.ResourceNotFoundException;
 import com.pina.mkt_api.repositories.BoardRepository;
 import com.pina.mkt_api.repositories.CompanyRepository;
 import com.pina.mkt_api.repositories.UserRepository;
+import com.pina.mkt_api.security.SecurityUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -17,11 +18,14 @@ public class BoardService {
     private final BoardRepository boardRepository;
     private final CompanyRepository companyRepository;
     private final UserRepository userRepository;
+    private final SecurityUtils securityUtils;
 
-    public BoardService(BoardRepository boardRepository, CompanyRepository companyRepository, UserRepository userRepository) {
+    public BoardService(BoardRepository boardRepository, CompanyRepository companyRepository,
+                        UserRepository userRepository, SecurityUtils securityUtils) {
         this.boardRepository = boardRepository;
         this.companyRepository = companyRepository;
         this.userRepository = userRepository;
+        this.securityUtils = securityUtils;
     }
 
     public Board create(Long companyId, Board board, List<Long> userIds) {
@@ -38,12 +42,21 @@ public class BoardService {
     }
 
     public List<Board> findAll() {
-        return boardRepository.findAll();
+        if (securityUtils.isAdmin()) {
+            return boardRepository.findAll();
+        }
+        return boardRepository.findByUsersEmail(securityUtils.getAuthenticatedEmail());
     }
 
     public Board findById(Long id) {
-        return boardRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Board não encontrado com o ID: " + id));
+        Board board = boardRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Board não encontrado"));
+
+        if (!securityUtils.isAdmin() && !boardRepository.existsByIdAndUsersEmail(id, securityUtils.getAuthenticatedEmail())) {
+            throw new ResourceNotFoundException("Board não encontrado");
+        }
+
+        return board;
     }
 
     public Board update(Long id, Board updatedBoard, List<Long> userIds) {

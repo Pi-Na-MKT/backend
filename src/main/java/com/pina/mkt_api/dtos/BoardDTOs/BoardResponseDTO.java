@@ -1,5 +1,6 @@
 package com.pina.mkt_api.dtos.BoardDTOs;
 
+import com.pina.mkt_api.dtos.UserDTOs.UserSummaryDTO;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -12,6 +13,6 @@ public record BoardResponseDTO(
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
         Long companyId,
-        List<Long> userIds
+        List<UserSummaryDTO> members
 ) {
 }

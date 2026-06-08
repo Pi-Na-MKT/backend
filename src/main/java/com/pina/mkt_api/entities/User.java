@@ -47,9 +47,6 @@ public class User {
     @Column(name = "seniority")
     private String seniority;
 
-    @Column(name = "department")
-    private String department;
-
     @Column(columnDefinition = "TEXT")
     private String responsibility;
 
@@ -144,13 +141,6 @@ public class User {
     }
     public void setSeniority(String seniority) {
         this.seniority = seniority;
-    }
-
-    public String getDepartment() {
-        return department;
-    }
-    public void setDepartment(String department) {
-        this.department = department;
     }
 
     public String getResponsibility() {

@@ -23,6 +23,9 @@ public class Company {
     @Column(name = "is_active")
     private Boolean isActive = true;
 
+    @Column(name = "google_calendar_id")
+    private String googleCalendarId;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -57,6 +60,13 @@ public class Company {
     }
     public void setIsActive(Boolean active) {
         isActive = active;
+    }
+
+    public String getGoogleCalendarId() {
+        return googleCalendarId;
+    }
+    public void setGoogleCalendarId(String googleCalendarId) {
+        this.googleCalendarId = googleCalendarId;
     }
 
     public LocalDateTime getCreatedAt() {

@@ -2,8 +2,9 @@ package com.pina.mkt_api.controllers;
 
 import com.pina.mkt_api.dtos.BoardDTOs.BoardRequestDTO;
 import com.pina.mkt_api.dtos.BoardDTOs.BoardResponseDTO;
+import com.pina.mkt_api.dtos.BoardDTOs.BoardUpdateDTO;
+import com.pina.mkt_api.dtos.UserDTOs.UserSummaryDTO;
 import com.pina.mkt_api.entities.Board;
-import com.pina.mkt_api.entities.User;
 import com.pina.mkt_api.services.BoardService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -11,6 +12,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -29,9 +31,10 @@ public class BoardController {
     }
 
     @PostMapping("/company/{companyId}")
-    @Operation(summary = "Criar board", description = "Cria um novo board associado a uma empresa e adiciona membros")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_MANAGER')")
+    @Operation(summary = "Criar board", description = "Cria um board em uma empresa. Requer ADMIN ou GESTOR.")
     public ResponseEntity<BoardResponseDTO> create(
-            @Parameter(description = "ID da Empresa (Company)") @PathVariable Long companyId,
+            @Parameter(description = "ID da empresa") @PathVariable Long companyId,
             @Valid @RequestBody BoardRequestDTO requestDTO) {
 
         Board board = new Board();
@@ -40,63 +43,70 @@ public class BoardController {
         board.setBackgroundColor(requestDTO.backgroundColor());
         board.setIsActive(requestDTO.isActive() != null ? requestDTO.isActive() : true);
 
-        Board savedBoard = service.create(companyId, board, requestDTO.userIds());
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(toDTO(savedBoard));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(toDTO(service.create(companyId, board, requestDTO.userIds())));
     }
 
     @GetMapping
-    @Operation(summary = "Listar boards", description = "Retorna todos os boards cadastrados")
+    @Operation(summary = "Listar boards", description = "Retorna os boards acessíveis ao usuário autenticado")
     public ResponseEntity<List<BoardResponseDTO>> getAll() {
-        List<BoardResponseDTO> response = service.findAll().stream()
-                .map(this::toDTO)
-                .collect(Collectors.toList());
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(service.findAll().stream().map(this::toDTO).collect(Collectors.toList()));
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Buscar board por ID", description = "Retorna os detalhes de um board específico")
+    @Operation(summary = "Buscar board por ID")
     public ResponseEntity<BoardResponseDTO> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(toDTO(service.findById(id)));
+    }
+
+    @GetMapping("/{id}/members")
+    @Operation(summary = "Listar membros do board", description = "Retorna os membros de um board específico")
+    public ResponseEntity<List<UserSummaryDTO>> getMembers(@PathVariable Long id) {
         Board board = service.findById(id);
-        return ResponseEntity.ok(toDTO(board));
+        List<UserSummaryDTO> members = board.getUsers() != null
+                ? board.getUsers().stream()
+                        .map(u -> new UserSummaryDTO(u.getId(), u.getName(), u.getAvatarUrl(), u.getJobTitle()))
+                        .collect(Collectors.toList())
+                : List.of();
+        return ResponseEntity.ok(members);
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "Atualizar board", description = "Atualiza os dados e os membros de um board")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_MANAGER')")
+    @Operation(summary = "Atualizar board", description = "Atualiza parcialmente os dados e membros de um board. Requer ADMIN ou GESTOR.")
     public ResponseEntity<BoardResponseDTO> update(
             @PathVariable Long id,
-            @Valid @RequestBody BoardRequestDTO requestDTO) {
+            @Valid @RequestBody BoardUpdateDTO updateDTO) {
 
         Board boardDetails = new Board();
-        boardDetails.setName(requestDTO.name());
-        boardDetails.setDescription(requestDTO.description());
-        boardDetails.setBackgroundColor(requestDTO.backgroundColor());
-        boardDetails.setIsActive(requestDTO.isActive());
+        boardDetails.setName(updateDTO.name());
+        boardDetails.setDescription(updateDTO.description());
+        boardDetails.setBackgroundColor(updateDTO.backgroundColor());
+        boardDetails.setIsActive(updateDTO.isActive());
 
-        Board updatedBoard = service.update(id, boardDetails, requestDTO.userIds());
-        return ResponseEntity.ok(toDTO(updatedBoard));
+        return ResponseEntity.ok(toDTO(service.update(id, boardDetails, updateDTO.userIds())));
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Excluir board", description = "Remove um board pelo seu ID")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_MANAGER')")
+    @Operation(summary = "Excluir board", description = "Remove um board. Requer ADMIN ou GESTOR.")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.delete(id);
         return ResponseEntity.noContent().build();
     }
 
     private BoardResponseDTO toDTO(Board board) {
+        List<UserSummaryDTO> members = board.getUsers() != null
+                ? board.getUsers().stream()
+                        .map(u -> new UserSummaryDTO(u.getId(), u.getName(), u.getAvatarUrl(), u.getJobTitle()))
+                        .collect(Collectors.toList())
+                : List.of();
+
         return new BoardResponseDTO(
-                board.getId(),
-                board.getName(),
-                board.getDescription(),
-                board.getBackgroundColor(),
-                board.getIsActive(),
-                board.getCreatedAt(),
-                board.getUpdatedAt(),
+                board.getId(), board.getName(), board.getDescription(), board.getBackgroundColor(),
+                board.getIsActive(), board.getCreatedAt(), board.getUpdatedAt(),
                 board.getCompany() != null ? board.getCompany().getId() : null,
-                board.getUsers() != null ?
-                        board.getUsers().stream().map(User::getId).collect(Collectors.toList()) : null
+                members
         );
     }
 }

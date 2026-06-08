@@ -1,5 +1,6 @@
 package com.pina.mkt_api.dtos.CardDTOs;
 
+import com.pina.mkt_api.dtos.UserDTOs.UserSummaryDTO;
 import com.pina.mkt_api.enums.Priority;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -11,10 +12,12 @@ public record CardResponseDTO(
         Priority priority,
         Integer position,
         Boolean isActive,
+        Boolean completed,
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
         LocalDateTime dueDate,
         Long columnId,
-        List<Long> assignedUserIds
+        String googleCalendarEventId,
+        List<UserSummaryDTO> assignedUsers
 ) {
 }

@@ -2,6 +2,7 @@ package com.pina.mkt_api.controllers;
 
 import com.pina.mkt_api.dtos.CompanyDTOs.CompanyRequestDTO;
 import com.pina.mkt_api.dtos.CompanyDTOs.CompanyResponseDTO;
+import com.pina.mkt_api.dtos.CompanyDTOs.CompanyUpdateDTO;
 import com.pina.mkt_api.entities.Company;
 import com.pina.mkt_api.services.CompanyService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -9,6 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,15 +29,10 @@ public class CompanyController {
     }
 
     @PostMapping
-    @Operation(summary = "Criar empresa", description = "Cadastra uma nova empresa no sistema")
-    public ResponseEntity<CompanyResponseDTO> create(
-            @Valid @RequestBody CompanyRequestDTO requestDTO) {
-        Company company = new Company();
-        company.setName(requestDTO.name());
-        company.setSlug(requestDTO.slug());
-        company.setIsActive(requestDTO.active() != null ? requestDTO.active() : true);
-
-        Company savedCompany = service.create(company);
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @Operation(summary = "Criar empresa", description = "Cadastra uma nova empresa. Requer papel ADMIN.")
+    public ResponseEntity<CompanyResponseDTO> create(@Valid @RequestBody CompanyRequestDTO requestDTO) {
+        Company savedCompany = service.create(requestDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(toDTO(savedCompany));
     }
 
@@ -56,21 +53,26 @@ public class CompanyController {
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "Atualizar empresa", description = "Atualiza os dados de uma empresa existente")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_MANAGER')")
+    @Operation(summary = "Atualizar empresa", description = "Atualiza os dados de uma empresa. Requer papel ADMIN ou GESTOR.")
     public ResponseEntity<CompanyResponseDTO> update(
             @PathVariable Long id,
-            @Valid @RequestBody CompanyRequestDTO requestDTO) {
-        Company company = new Company();
-        company.setName(requestDTO.name());
-        company.setSlug(requestDTO.slug());
-        company.setIsActive(requestDTO.active());
-
-        Company updatedCompany = service.update(id, company);
+            @Valid @RequestBody CompanyUpdateDTO updateDTO) {
+        Company updatedCompany = service.update(id, updateDTO);
         return ResponseEntity.ok(toDTO(updatedCompany));
     }
 
+    @PostMapping("/{id}/calendar")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_MANAGER')")
+    @Operation(summary = "Vincular Google Calendar", description = "Cria um calendário no Google Calendar para a empresa.")
+    public ResponseEntity<CompanyResponseDTO> linkCalendar(@PathVariable Long id) {
+        Company company = service.linkGoogleCalendar(id);
+        return ResponseEntity.ok(toDTO(company));
+    }
+
     @DeleteMapping("/{id}")
-    @Operation(summary = "Excluir empresa", description = "Remove uma empresa pelo seu ID")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @Operation(summary = "Excluir empresa", description = "Remove uma empresa. Requer papel ADMIN.")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.delete(id);
         return ResponseEntity.noContent().build();
@@ -82,6 +84,7 @@ public class CompanyController {
                 company.getName(),
                 company.getSlug(),
                 company.getIsActive(),
+                company.getGoogleCalendarId(),
                 company.getCreatedAt(),
                 company.getUpdatedAt()
         );
