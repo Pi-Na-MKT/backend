@@ -62,6 +62,14 @@ public class CompanyController {
         return ResponseEntity.ok(toDTO(updatedCompany));
     }
 
+    @PostMapping("/{id}/calendar")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_MANAGER')")
+    @Operation(summary = "Vincular Google Calendar", description = "Cria um calendário no Google Calendar para a empresa.")
+    public ResponseEntity<CompanyResponseDTO> linkCalendar(@PathVariable Long id) {
+        Company company = service.linkGoogleCalendar(id);
+        return ResponseEntity.ok(toDTO(company));
+    }
+
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @Operation(summary = "Excluir empresa", description = "Remove uma empresa. Requer papel ADMIN.")
@@ -76,6 +84,7 @@ public class CompanyController {
                 company.getName(),
                 company.getSlug(),
                 company.getIsActive(),
+                company.getGoogleCalendarId(),
                 company.getCreatedAt(),
                 company.getUpdatedAt()
         );

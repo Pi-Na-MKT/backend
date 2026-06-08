@@ -31,6 +31,9 @@ public record CardRequestDTO(
         @Schema(description = "Status ativo do card", example = "true")
         Boolean isActive,
 
+        @Schema(description = "Card marcado como concluído", example = "false")
+        Boolean completed,
+
         @Schema(description = "IDs dos usuários responsáveis por esta tarefa")
         List<Long> assignedUserIds
 ) {}

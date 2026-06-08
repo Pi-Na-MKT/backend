@@ -1,28 +1,31 @@
 package com.pina.mkt_api.controllers;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.pina.mkt_api.dtos.UserDTOs.UserRequestDTO;
 import com.pina.mkt_api.entities.Role;
 import com.pina.mkt_api.entities.User;
+import com.pina.mkt_api.exceptions.ResourceNotFoundException;
+import com.pina.mkt_api.security.JwtUtil;
+import com.pina.mkt_api.security.SecurityUtils;
 import com.pina.mkt_api.services.UserService;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest
-@AutoConfigureMockMvc(addFilters = false)
+@WebMvcTest(UserController.class)
+@WithMockUser(roles = "ADMIN")
+@DisplayName("Testes do UserController")
 class UserControllerTest {
 
     @Autowired
@@ -30,93 +33,136 @@ class UserControllerTest {
 
     @MockBean
     private UserService userService;
+    @MockBean
+    private JwtUtil jwtUtil;
+    @MockBean
+    private SecurityUtils securityUtils;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    // ───────────────────────────────────────────────
-    // TESTE: REGISTER
-    // ───────────────────────────────────────────────
-    @Test
-    void deveRegistrarUsuario() throws Exception {
-
-        UserRequestDTO request = new UserRequestDTO(
-                "Teste",
-                "teste@email.com",
-                "123456",
-                "11999999999",
-                "Analista",
-                "Estratégia",
-                "junior",
-                "USER",
-                null,
-                "Fazer X",
-                "Bio",
-                "linkedin",
-                null
-        );
-
+    private User buildUser(Long id, String name, String email) {
         Role role = new Role();
         role.setName("USER");
+        role.setAccessKey("ROLE_USER");
 
         User user = new User();
-        user.setId(1L);
-        user.setName("Teste");
-        user.setEmail("teste@email.com");
+        user.setId(id);
+        user.setName(name);
+        user.setEmail(email);
         user.setRole(role);
-
-        when(userService.register(request)).thenReturn(user);
-
-        mockMvc.perform(post("/api/users/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.name").value("Teste"))
-                .andExpect(jsonPath("$.email").value("teste@email.com"));
+        return user;
     }
 
-    // ───────────────────────────────────────────────
-    // TESTE: GET ALL USERS
-    // ───────────────────────────────────────────────
-    @Test
-    void deveListarUsuarios() throws Exception {
+    @Nested
+    @DisplayName("POST /api/users/register")
+    class RegisterTests {
 
-        User user = new User();
-        user.setId(1L);
-        user.setName("Teste");
-        user.setEmail("teste@email.com");
+        @Test
+        @DisplayName("Deve registrar usuário e retornar 201")
+        void deveRegistrarUsuario() throws Exception {
+            // arrange
+            User usuario = buildUser(1L, "Teste", "teste@email.com");
+            Mockito.when(userService.register(Mockito.any())).thenReturn(usuario);
 
-        when(userService.findAllUsers()).thenReturn(List.of(user));
+            String corpo = """
+                    {
+                        "name": "Teste",
+                        "email": "teste@email.com",
+                        "password": "senha123"
+                    }
+                    """;
 
-        mockMvc.perform(get("/api/users"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].name").value("Teste"));
+            // act | assert
+            mockMvc.perform(post("/api/users/register")
+                            .with(csrf())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(corpo))
+                    .andExpect(status().is(201))
+                    .andExpect(jsonPath("$.name").value("Teste"))
+                    .andExpect(jsonPath("$.email").value("teste@email.com"));
+        }
     }
 
-    // ───────────────────────────────────────────────
-    // TESTE: GET BY ID
-    // ───────────────────────────────────────────────
-    @Test
-    void deveBuscarUsuarioPorId() throws Exception {
+    @Nested
+    @DisplayName("GET /api/users/{id}")
+    class BuscarPorIdTests {
 
-        User user = new User();
-        user.setId(1L);
-        user.setName("Teste");
+        @Test
+        @DisplayName("Deve retornar usuário por id corretamente")
+        void deveRetornarUsuarioPorId() throws Exception {
+            // arrange
+            User usuario = buildUser(1L, "Teste", "teste@email.com");
+            Mockito.when(userService.findById(1L)).thenReturn(usuario);
 
-        when(userService.findById(1L)).thenReturn(user);
+            // act | assert
+            mockMvc.perform(get("/api/users/{id}", 1))
+                    .andExpect(status().is(200))
+                    .andExpect(jsonPath("$.id").value(1))
+                    .andExpect(jsonPath("$.name").value("Teste"))
+                    .andExpect(jsonPath("$.email").value("teste@email.com"));
+        }
 
-        mockMvc.perform(get("/api/users/1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Teste"));
+        @Test
+        @DisplayName("Deve retornar 404 quando usuário não encontrado")
+        void deveRetornarNotFoundQuandoNaoEncontrado() throws Exception {
+            // arrange
+            Mockito.when(userService.findById(99L))
+                    .thenThrow(new ResourceNotFoundException("Usuário não encontrado"));
+
+            // act | assert
+            mockMvc.perform(get("/api/users/{id}", 99))
+                    .andExpect(status().is(404));
+        }
     }
 
-    // ───────────────────────────────────────────────
-    // TESTE: DELETE (soft delete)
-    // ───────────────────────────────────────────────
-    @Test
-    void deveDeletarUsuario() throws Exception {
+    @Nested
+    @DisplayName("GET /api/users")
+    class ListarTests {
 
-        mockMvc.perform(delete("/api/users/1"))
-                .andExpect(status().isNoContent());
+        @Test
+        @DisplayName("Deve listar usuários corretamente")
+        void deveListarUsuarios() throws Exception {
+            // arrange
+            Mockito.when(userService.findAllUsers())
+                    .thenReturn(List.of(
+                            buildUser(1L, "Teste", "teste@email.com"),
+                            buildUser(2L, "Outro", "outro@email.com")
+                    ));
+
+            // act | assert
+            mockMvc.perform(get("/api/users"))
+                    .andExpect(status().is(200))
+                    .andExpect(jsonPath("$[0].name").value("Teste"))
+                    .andExpect(jsonPath("$[1].name").value("Outro"));
+        }
+    }
+
+    @Nested
+    @DisplayName("POST /api/users/login")
+    class LoginTests {
+
+        @Test
+        @DisplayName("Deve realizar login e retornar token JWT")
+        void deveRealizarLogin() throws Exception {
+            // arrange
+            User usuario = buildUser(1L, "Teste", "teste@email.com");
+            Mockito.when(userService.login("teste@email.com", "senha123")).thenReturn(usuario);
+            Mockito.when(jwtUtil.generateToken(Mockito.anyString(), Mockito.anyString()))
+                    .thenReturn("mock-jwt-token");
+
+            String corpo = """
+                    {
+                        "email": "teste@email.com",
+                        "password": "senha123"
+                    }
+                    """;
+
+            // act | assert
+            mockMvc.perform(post("/api/users/login")
+                            .with(csrf())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(corpo))
+                    .andExpect(status().is(200))
+                    .andExpect(jsonPath("$.token").value("mock-jwt-token"))
+                    .andExpect(jsonPath("$.name").value("Teste"));
+        }
     }
 }

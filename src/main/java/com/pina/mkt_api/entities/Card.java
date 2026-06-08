@@ -33,6 +33,12 @@ public class Card {
     @Column(name = "is_active")
     private Boolean isActive = true;
 
+    @Column(name = "completed")
+    private Boolean completed = false;
+
+    @Column(name = "google_calendar_event_id")
+    private String googleCalendarEventId;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -100,6 +106,20 @@ public class Card {
     }
     public void setIsActive(Boolean active) {
         isActive = active;
+    }
+
+    public Boolean getCompleted() {
+        return completed;
+    }
+    public void setCompleted(Boolean completed) {
+        this.completed = completed;
+    }
+
+    public String getGoogleCalendarEventId() {
+        return googleCalendarEventId;
+    }
+    public void setGoogleCalendarEventId(String googleCalendarEventId) {
+        this.googleCalendarEventId = googleCalendarEventId;
     }
 
     public LocalDateTime getCreatedAt() {

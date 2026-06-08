@@ -91,6 +91,7 @@ public class CardController {
         cardDetails.setPosition(updateDTO.position());
         cardDetails.setDueDate(updateDTO.dueDate());
         cardDetails.setIsActive(updateDTO.isActive());
+        cardDetails.setCompleted(updateDTO.completed());
 
         return ResponseEntity.ok(toDTO(cardService.updateCard(id, cardDetails, updateDTO.assignedUserIds())));
     }
@@ -106,6 +107,12 @@ public class CardController {
             @Parameter(description = "ID do card") @PathVariable Long id,
             @Valid @RequestBody CardMoveDTO moveDTO) {
         return ResponseEntity.ok(toDTO(cardService.moveCard(id, moveDTO.columnId(), moveDTO.position())));
+    }
+
+    @PostMapping("/{id}/calendar-event")
+    @Operation(summary = "Criar evento no Google Calendar", description = "Cria manualmente um evento no Google Calendar para o card.")
+    public ResponseEntity<CardResponseDTO> createCalendarEvent(@PathVariable Long id) {
+        return ResponseEntity.ok(toDTO(cardService.createGoogleCalendarEvent(id)));
     }
 
     @DeleteMapping("/{id}")
@@ -124,8 +131,10 @@ public class CardController {
 
         return new CardResponseDTO(
                 card.getId(), card.getTitle(), card.getDescription(), card.getPriority(),
-                card.getPosition(), card.getIsActive(), card.getCreatedAt(), card.getUpdatedAt(),
+                card.getPosition(), card.getIsActive(), card.getCompleted(),
+                card.getCreatedAt(), card.getUpdatedAt(),
                 card.getDueDate(), card.getColumn() != null ? card.getColumn().getId() : null,
+                card.getGoogleCalendarEventId(),
                 assignedUsers
         );
     }
@@ -136,6 +145,7 @@ public class CardController {
         card.setPriority(dto.priority());
         card.setPosition(dto.position());
         card.setDueDate(dto.dueDate());
-        if (dto.isActive() != null) card.setIsActive(dto.isActive());
+        if (dto.isActive()  != null) card.setIsActive(dto.isActive());
+        if (dto.completed() != null) card.setCompleted(dto.completed());
     }
 }

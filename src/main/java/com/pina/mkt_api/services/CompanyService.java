@@ -16,10 +16,14 @@ public class CompanyService {
 
     private final CompanyRepository repository;
     private final SecurityUtils securityUtils;
+    private final CalendarIntegration calendarIntegration;
 
-    public CompanyService(CompanyRepository repository, SecurityUtils securityUtils) {
+    public CompanyService(CompanyRepository repository, SecurityUtils securityUtils,
+                          @org.springframework.beans.factory.annotation.Autowired(required = false)
+                          CalendarIntegration calendarIntegration) {
         this.repository = repository;
         this.securityUtils = securityUtils;
+        this.calendarIntegration = calendarIntegration;
     }
 
     public Company create(CompanyRequestDTO dto) {
@@ -74,6 +78,27 @@ public class CompanyService {
         }
 
         return repository.save(company);
+    }
+
+    public Company linkGoogleCalendar(Long id) {
+        Company company = repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Empresa não encontrada com o ID: " + id));
+
+        if (company.getGoogleCalendarId() != null) {
+            throw new BusinessRuleException("Esta empresa já possui um calendário vinculado no Google Calendar.");
+        }
+
+        if (calendarIntegration == null) {
+            throw new BusinessRuleException("Integração com Google Calendar não está configurada.");
+        }
+
+        try {
+            String calendarId = calendarIntegration.createCalendarForCompany(company.getName());
+            company.setGoogleCalendarId(calendarId);
+            return repository.save(company);
+        } catch (Exception e) {
+            throw new BusinessRuleException("Erro ao criar calendário no Google Calendar: " + e.getMessage());
+        }
     }
 
     public void delete(Long id) {

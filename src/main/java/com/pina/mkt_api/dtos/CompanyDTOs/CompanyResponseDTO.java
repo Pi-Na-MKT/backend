@@ -16,6 +16,9 @@ public record CompanyResponseDTO(
         @Schema(description = "Status de atividade da empresa", example = "true")
         Boolean active,
 
+        @Schema(description = "ID do calendário no Google Calendar (null se não vinculado)")
+        String googleCalendarId,
+
         @Schema(description = "Data de registro no sistema")
         LocalDateTime createdAt,
 

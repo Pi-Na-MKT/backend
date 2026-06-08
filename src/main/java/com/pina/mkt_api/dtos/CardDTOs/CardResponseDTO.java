@@ -12,10 +12,12 @@ public record CardResponseDTO(
         Priority priority,
         Integer position,
         Boolean isActive,
+        Boolean completed,
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
         LocalDateTime dueDate,
         Long columnId,
+        String googleCalendarEventId,
         List<UserSummaryDTO> assignedUsers
 ) {
 }
