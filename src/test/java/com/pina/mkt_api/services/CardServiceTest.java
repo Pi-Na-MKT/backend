@@ -84,6 +84,7 @@ class CardServiceTest {
             card.setPosition(1);
 
             Mockito.when(columnRepository.findById(1L)).thenReturn(Optional.of(column));
+            Mockito.when(securityUtils.isAdmin()).thenReturn(true);
             Mockito.when(cardRepository.save(Mockito.any(Card.class))).thenAnswer(inv -> {
                 Card c = inv.getArgument(0);
                 c.setId(10L);
@@ -458,6 +459,7 @@ class CardServiceTest {
             card.setTitle("Com responsáveis");
 
             Mockito.when(columnRepository.findById(1L)).thenReturn(Optional.of(column));
+            Mockito.when(securityUtils.isAdmin()).thenReturn(true);
             Mockito.when(boardRepository.findMemberIdsByBoardId(1L)).thenReturn(List.of(1L, 2L));
             Mockito.when(userRepository.findAllById(List.of(1L, 2L)))
                     .thenReturn(List.of(new User(), new User()));
@@ -481,6 +483,7 @@ class CardServiceTest {
             card.setTitle("Com responsáveis");
 
             Mockito.when(columnRepository.findById(1L)).thenReturn(Optional.of(column));
+            Mockito.when(securityUtils.isAdmin()).thenReturn(true);
             Mockito.when(boardRepository.findMemberIdsByBoardId(1L)).thenReturn(List.of(1L));
 
             Assertions.assertThrows(BusinessRuleException.class,

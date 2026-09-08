@@ -21,7 +21,6 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/columns")
-@CrossOrigin(origins = "*")
 @Tag(name = "4 - Board Columns", description = "Gerenciamento de colunas do board")
 public class BoardColumnController {
 

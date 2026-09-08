@@ -80,10 +80,10 @@ public class UserService {
         user.setBio(request.bio());
         user.setLinkedin(request.linkedin());
 
-        Role role = roleRepository
-                .findByName(request.role() != null ? request.role().toUpperCase() : "USER")
-                .orElseGet(() -> roleRepository.findByName("USER")
-                        .orElseThrow(() -> new RuntimeException("Cadastre a role USER no banco")));
+        // Auto-registro sempre recebe o papel padrão USER. O papel não pode ser
+        // definido pelo cliente, evitando escalação de privilégio (OWASP A01).
+        Role role = roleRepository.findByName("USER")
+                .orElseThrow(() -> new RuntimeException("Cadastre a role USER no banco"));
 
         user.setRole(role);
         return userRepository.save(user);

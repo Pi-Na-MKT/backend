@@ -33,7 +33,7 @@ public record UserRequestDTO(
         @Schema(description = "Nível de senioridade", example = "junior")
         String seniority,
 
-        @Schema(description = "Nível de acesso (uso em auto-registro)", example = "user")
+        @Schema(description = "Campo ignorado no auto-registro (o papel é sempre USER). Para definição administrativa de papel, utilize roleId.", example = "user")
         String role,
 
         @Schema(description = "ID do perfil (uso administrativo)", example = "2")

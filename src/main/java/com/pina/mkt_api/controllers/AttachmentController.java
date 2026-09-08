@@ -22,7 +22,6 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/attachments")
-@CrossOrigin(origins = "*")
 @Tag(name = "6 - Attachments", description = "Gerenciamento de anexos por empresa")
 public class AttachmentController {
 

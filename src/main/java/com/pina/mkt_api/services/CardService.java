@@ -49,6 +49,14 @@ public class CardService {
     public Card createCard(Long columnId, Card card, List<Long> assignedUserIds) {
         BoardColumn column = columnRepository.findById(columnId)
                 .orElseThrow(() -> new ResourceNotFoundException("Coluna não encontrada"));
+
+        // Garante que o usuário só cria cards em boards a que pertence (evita IDOR - OWASP A01).
+        Long ownerBoardId = column.getBoard().getId();
+        if (!securityUtils.isAdmin()
+                && !boardRepository.existsByIdAndUsersEmail(ownerBoardId, securityUtils.getAuthenticatedEmail())) {
+            throw new ResourceNotFoundException("Coluna não encontrada");
+        }
+
         card.setColumn(column);
 
         if (assignedUserIds != null && !assignedUserIds.isEmpty()) {

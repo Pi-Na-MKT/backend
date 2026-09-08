@@ -19,7 +19,6 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/users")
-@CrossOrigin(origins = "*")
 @Tag(name = "1 - Users", description = "Gerenciamento de usuários e autenticação")
 public class UserController {
 
