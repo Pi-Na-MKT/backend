@@ -15,6 +15,7 @@ import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -34,6 +35,8 @@ class CardServiceTest {
     private SecurityUtils securityUtils;
     @Mock
     private ApplicationEventPublisher eventPublisher;
+    @Mock
+    private CalendarIntegration calendarIntegration;
 
     @InjectMocks
     private CardService cardService;
@@ -209,10 +212,10 @@ class CardServiceTest {
         @Test
         @DisplayName("Deve mover card para outra coluna e publicar CardMovedEvent")
         void deveMoverCardEPublicarEvento() {
-            Card card = buildCard(1L, "Tarefa", false); // column.board.id = 1
+            Card card = buildCard(1L, "Tarefa", false);
 
             Board board = new Board();
-            board.setId(1L); // mesmo board
+            board.setId(1L);
             BoardColumn destino = new BoardColumn();
             destino.setId(2L);
             destino.setBoard(board);
@@ -232,7 +235,7 @@ class CardServiceTest {
         @Test
         @DisplayName("Deve lançar BusinessRuleException ao mover para coluna de outro board")
         void deveLancarExcecaoParaColunaDeOutroBoard() {
-            Card card = buildCard(1L, "Tarefa", false); // column.board.id = 1
+            Card card = buildCard(1L, "Tarefa", false);
 
             Board outraBoard = new Board();
             outraBoard.setId(99L);
@@ -266,6 +269,223 @@ class CardServiceTest {
             cardService.deleteCard(1L);
 
             Mockito.verify(cardRepository).delete(card);
+        }
+    }
+
+    @Nested
+    @DisplayName("Testes do método findById")
+    class FindByIdTests {
+
+        @Test
+        @DisplayName("Admin deve obter qualquer card")
+        void adminDeveObter() {
+            Mockito.when(cardRepository.findById(1L)).thenReturn(Optional.of(buildCard(1L, "Tarefa", false)));
+            Mockito.when(securityUtils.isAdmin()).thenReturn(true);
+
+            Card resultado = cardService.findById(1L);
+
+            Assertions.assertEquals("Tarefa", resultado.getTitle());
+        }
+
+        @Test
+        @DisplayName("Não-admin com acesso deve obter o card")
+        void naoAdminComAcesso() {
+            Mockito.when(cardRepository.findById(1L)).thenReturn(Optional.of(buildCard(1L, "Tarefa", false)));
+            Mockito.when(securityUtils.isAdmin()).thenReturn(false);
+            Mockito.when(securityUtils.getAuthenticatedEmail()).thenReturn("u@e.com");
+            Mockito.when(cardRepository.countCardAccessForUser(1L, "u@e.com")).thenReturn(1L);
+
+            Card resultado = cardService.findById(1L);
+
+            Assertions.assertEquals("Tarefa", resultado.getTitle());
+        }
+
+        @Test
+        @DisplayName("Não-admin sem acesso deve receber ResourceNotFoundException")
+        void naoAdminSemAcesso() {
+            Mockito.when(cardRepository.findById(1L)).thenReturn(Optional.of(buildCard(1L, "Tarefa", false)));
+            Mockito.when(securityUtils.isAdmin()).thenReturn(false);
+            Mockito.when(securityUtils.getAuthenticatedEmail()).thenReturn("u@e.com");
+            Mockito.when(cardRepository.countCardAccessForUser(1L, "u@e.com")).thenReturn(0L);
+
+            Assertions.assertThrows(ResourceNotFoundException.class, () -> cardService.findById(1L));
+        }
+
+        @Test
+        @DisplayName("Deve lançar ResourceNotFoundException quando o card não existe")
+        void cardNaoExiste() {
+            Mockito.when(cardRepository.findById(99L)).thenReturn(Optional.empty());
+
+            Assertions.assertThrows(ResourceNotFoundException.class, () -> cardService.findById(99L));
+        }
+    }
+
+    @Nested
+    @DisplayName("Testes do método findByColumn")
+    class FindByColumnTests {
+
+        @Test
+        @DisplayName("Admin deve obter os cards da coluna diretamente")
+        void adminDeveObter() {
+            Mockito.when(securityUtils.isAdmin()).thenReturn(true);
+            Mockito.when(cardRepository.findByColumnId(1L)).thenReturn(List.of(buildCard(1L, "T", false)));
+
+            List<Card> resultado = cardService.findByColumn(1L);
+
+            Assertions.assertEquals(1, resultado.size());
+            Mockito.verify(columnRepository, Mockito.never()).findById(Mockito.any());
+        }
+
+        @Test
+        @DisplayName("Não-admin com acesso deve obter os cards da coluna")
+        void naoAdminComAcesso() {
+            Board board = new Board();
+            board.setId(1L);
+            BoardColumn column = new BoardColumn();
+            column.setId(1L);
+            column.setBoard(board);
+
+            Mockito.when(securityUtils.isAdmin()).thenReturn(false);
+            Mockito.when(columnRepository.findById(1L)).thenReturn(Optional.of(column));
+            Mockito.when(securityUtils.getAuthenticatedEmail()).thenReturn("u@e.com");
+            Mockito.when(boardRepository.existsByIdAndUsersEmail(1L, "u@e.com")).thenReturn(true);
+            Mockito.when(cardRepository.findByColumnId(1L)).thenReturn(List.of(buildCard(1L, "T", false)));
+
+            List<Card> resultado = cardService.findByColumn(1L);
+
+            Assertions.assertEquals(1, resultado.size());
+        }
+
+        @Test
+        @DisplayName("Não-admin sem acesso deve receber ResourceNotFoundException")
+        void naoAdminSemAcesso() {
+            Board board = new Board();
+            board.setId(1L);
+            BoardColumn column = new BoardColumn();
+            column.setId(1L);
+            column.setBoard(board);
+
+            Mockito.when(securityUtils.isAdmin()).thenReturn(false);
+            Mockito.when(columnRepository.findById(1L)).thenReturn(Optional.of(column));
+            Mockito.when(securityUtils.getAuthenticatedEmail()).thenReturn("u@e.com");
+            Mockito.when(boardRepository.existsByIdAndUsersEmail(1L, "u@e.com")).thenReturn(false);
+
+            Assertions.assertThrows(ResourceNotFoundException.class, () -> cardService.findByColumn(1L));
+        }
+
+        @Test
+        @DisplayName("Não-admin com coluna inexistente deve receber ResourceNotFoundException")
+        void colunaInexistente() {
+            Mockito.when(securityUtils.isAdmin()).thenReturn(false);
+            Mockito.when(columnRepository.findById(99L)).thenReturn(Optional.empty());
+
+            Assertions.assertThrows(ResourceNotFoundException.class, () -> cardService.findByColumn(99L));
+        }
+    }
+
+    @Nested
+    @DisplayName("Testes do método createGoogleCalendarEvent")
+    class CreateGoogleCalendarEventTests {
+
+        @Test
+        @DisplayName("Deve criar o evento no Google Calendar com sucesso")
+        void deveCriarEventoComSucesso() throws Exception {
+            Card card = buildCard(1L, "Tarefa", false);
+            card.setDueDate(LocalDateTime.now().plusDays(1));
+            card.getColumn().getBoard().getCompany().setGoogleCalendarId("cal-123");
+
+            Mockito.when(cardRepository.findById(1L)).thenReturn(Optional.of(card));
+            Mockito.when(securityUtils.isAdmin()).thenReturn(true);
+            Mockito.when(calendarIntegration.createEventForCard("cal-123", card)).thenReturn("evt-1");
+            Mockito.when(cardRepository.save(Mockito.any(Card.class))).thenAnswer(inv -> inv.getArgument(0));
+
+            Card resultado = cardService.createGoogleCalendarEvent(1L);
+
+            Assertions.assertEquals("evt-1", resultado.getGoogleCalendarEventId());
+        }
+
+        @Test
+        @DisplayName("Deve lançar BusinessRuleException quando o card não tem prazo")
+        void deveLancarExcecaoSemPrazo() {
+            Card card = buildCard(1L, "Tarefa", false);
+
+            Mockito.when(cardRepository.findById(1L)).thenReturn(Optional.of(card));
+            Mockito.when(securityUtils.isAdmin()).thenReturn(true);
+
+            Assertions.assertThrows(BusinessRuleException.class, () -> cardService.createGoogleCalendarEvent(1L));
+        }
+
+        @Test
+        @DisplayName("Deve lançar BusinessRuleException quando a empresa não tem calendário vinculado")
+        void deveLancarExcecaoSemCalendario() {
+            Card card = buildCard(1L, "Tarefa", false);
+            card.setDueDate(LocalDateTime.now().plusDays(1));
+
+            Mockito.when(cardRepository.findById(1L)).thenReturn(Optional.of(card));
+            Mockito.when(securityUtils.isAdmin()).thenReturn(true);
+
+            Assertions.assertThrows(BusinessRuleException.class, () -> cardService.createGoogleCalendarEvent(1L));
+        }
+
+        @Test
+        @DisplayName("Deve lançar BusinessRuleException quando o card já possui evento vinculado")
+        void deveLancarExcecaoEventoJaExiste() {
+            Card card = buildCard(1L, "Tarefa", false);
+            card.setDueDate(LocalDateTime.now().plusDays(1));
+            card.getColumn().getBoard().getCompany().setGoogleCalendarId("cal-123");
+            card.setGoogleCalendarEventId("evt-existente");
+
+            Mockito.when(cardRepository.findById(1L)).thenReturn(Optional.of(card));
+            Mockito.when(securityUtils.isAdmin()).thenReturn(true);
+
+            Assertions.assertThrows(BusinessRuleException.class, () -> cardService.createGoogleCalendarEvent(1L));
+        }
+    }
+
+    @Nested
+    @DisplayName("Testes de createCard com usuários atribuídos")
+    class CreateCardWithAssignedUsersTests {
+
+        @Test
+        @DisplayName("Deve criar card atribuindo usuários membros do board")
+        void deveCriarComUsuariosMembros() {
+            Board board = new Board();
+            board.setId(1L);
+            BoardColumn column = new BoardColumn();
+            column.setId(1L);
+            column.setBoard(board);
+            Card card = new Card();
+            card.setTitle("Com responsáveis");
+
+            Mockito.when(columnRepository.findById(1L)).thenReturn(Optional.of(column));
+            Mockito.when(boardRepository.findMemberIdsByBoardId(1L)).thenReturn(List.of(1L, 2L));
+            Mockito.when(userRepository.findAllById(List.of(1L, 2L)))
+                    .thenReturn(List.of(new User(), new User()));
+            Mockito.when(cardRepository.save(Mockito.any(Card.class))).thenAnswer(inv -> inv.getArgument(0));
+
+            Card resultado = cardService.createCard(1L, card, List.of(1L, 2L));
+
+            Assertions.assertEquals(2, resultado.getAssignedUsers().size());
+            Mockito.verify(eventPublisher).publishEvent(Mockito.any(CardCreatedEvent.class));
+        }
+
+        @Test
+        @DisplayName("Deve lançar BusinessRuleException quando há usuário não-membro do board")
+        void deveLancarExcecaoUsuarioNaoMembro() {
+            Board board = new Board();
+            board.setId(1L);
+            BoardColumn column = new BoardColumn();
+            column.setId(1L);
+            column.setBoard(board);
+            Card card = new Card();
+            card.setTitle("Com responsáveis");
+
+            Mockito.when(columnRepository.findById(1L)).thenReturn(Optional.of(column));
+            Mockito.when(boardRepository.findMemberIdsByBoardId(1L)).thenReturn(List.of(1L));
+
+            Assertions.assertThrows(BusinessRuleException.class,
+                    () -> cardService.createCard(1L, card, List.of(3L)));
+            Mockito.verify(eventPublisher, Mockito.never()).publishEvent(Mockito.any());
         }
     }
 }

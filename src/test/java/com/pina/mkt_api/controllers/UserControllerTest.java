@@ -58,7 +58,6 @@ class UserControllerTest {
         @Test
         @DisplayName("Deve registrar usuário e retornar 201")
         void deveRegistrarUsuario() throws Exception {
-            // arrange
             User usuario = buildUser(1L, "Teste", "teste@email.com");
             Mockito.when(userService.register(Mockito.any())).thenReturn(usuario);
 
@@ -70,7 +69,6 @@ class UserControllerTest {
                     }
                     """;
 
-            // act | assert
             mockMvc.perform(post("/api/users/register")
                             .with(csrf())
                             .contentType(MediaType.APPLICATION_JSON)
@@ -88,11 +86,9 @@ class UserControllerTest {
         @Test
         @DisplayName("Deve retornar usuário por id corretamente")
         void deveRetornarUsuarioPorId() throws Exception {
-            // arrange
             User usuario = buildUser(1L, "Teste", "teste@email.com");
             Mockito.when(userService.findById(1L)).thenReturn(usuario);
 
-            // act | assert
             mockMvc.perform(get("/api/users/{id}", 1))
                     .andExpect(status().is(200))
                     .andExpect(jsonPath("$.id").value(1))
@@ -103,11 +99,9 @@ class UserControllerTest {
         @Test
         @DisplayName("Deve retornar 404 quando usuário não encontrado")
         void deveRetornarNotFoundQuandoNaoEncontrado() throws Exception {
-            // arrange
             Mockito.when(userService.findById(99L))
                     .thenThrow(new ResourceNotFoundException("Usuário não encontrado"));
 
-            // act | assert
             mockMvc.perform(get("/api/users/{id}", 99))
                     .andExpect(status().is(404));
         }
@@ -120,14 +114,12 @@ class UserControllerTest {
         @Test
         @DisplayName("Deve listar usuários corretamente")
         void deveListarUsuarios() throws Exception {
-            // arrange
             Mockito.when(userService.findAllUsers())
                     .thenReturn(List.of(
                             buildUser(1L, "Teste", "teste@email.com"),
                             buildUser(2L, "Outro", "outro@email.com")
                     ));
 
-            // act | assert
             mockMvc.perform(get("/api/users"))
                     .andExpect(status().is(200))
                     .andExpect(jsonPath("$[0].name").value("Teste"))
@@ -142,7 +134,6 @@ class UserControllerTest {
         @Test
         @DisplayName("Deve realizar login e retornar token JWT")
         void deveRealizarLogin() throws Exception {
-            // arrange
             User usuario = buildUser(1L, "Teste", "teste@email.com");
             Mockito.when(userService.login("teste@email.com", "senha123")).thenReturn(usuario);
             Mockito.when(jwtUtil.generateToken(Mockito.anyString(), Mockito.anyString()))
@@ -155,7 +146,6 @@ class UserControllerTest {
                     }
                     """;
 
-            // act | assert
             mockMvc.perform(post("/api/users/login")
                             .with(csrf())
                             .contentType(MediaType.APPLICATION_JSON)

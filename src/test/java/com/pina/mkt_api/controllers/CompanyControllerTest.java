@@ -50,7 +50,6 @@ class CompanyControllerTest {
         @Test
         @DisplayName("Deve criar empresa e retornar 201")
         void deveCriarEmpresa() throws Exception {
-            // arrange
             Company empresa = buildCompany(1L, "Tech Co", "tech-co");
             Mockito.when(companyService.create(Mockito.any())).thenReturn(empresa);
 
@@ -62,7 +61,6 @@ class CompanyControllerTest {
                     }
                     """;
 
-            // act | assert
             mockMvc.perform(post("/api/companies")
                             .with(csrf())
                             .contentType(MediaType.APPLICATION_JSON)
@@ -80,14 +78,12 @@ class CompanyControllerTest {
         @Test
         @DisplayName("Deve listar empresas corretamente")
         void deveListarEmpresas() throws Exception {
-            // arrange
             Mockito.when(companyService.findAll())
                     .thenReturn(List.of(
                             buildCompany(1L, "Tech Co", "tech-co"),
                             buildCompany(2L, "Pina MKT", "pina-mkt")
                     ));
 
-            // act | assert
             mockMvc.perform(get("/api/companies"))
                     .andExpect(status().is(200))
                     .andExpect(jsonPath("$[0].name").value("Tech Co"))
@@ -97,10 +93,8 @@ class CompanyControllerTest {
         @Test
         @DisplayName("Deve retornar lista vazia quando não há empresas")
         void deveRetornarListaVazia() throws Exception {
-            // arrange
             Mockito.when(companyService.findAll()).thenReturn(List.of());
 
-            // act | assert
             mockMvc.perform(get("/api/companies"))
                     .andExpect(status().is(200))
                     .andExpect(jsonPath("$").isEmpty());
@@ -114,11 +108,9 @@ class CompanyControllerTest {
         @Test
         @DisplayName("Deve retornar empresa por id corretamente")
         void deveBuscarEmpresaPorId() throws Exception {
-            // arrange
             Company empresa = buildCompany(1L, "Tech Co", "tech-co");
             Mockito.when(companyService.findById(1L)).thenReturn(empresa);
 
-            // act | assert
             mockMvc.perform(get("/api/companies/{id}", 1))
                     .andExpect(status().is(200))
                     .andExpect(jsonPath("$.id").value(1))
@@ -129,11 +121,9 @@ class CompanyControllerTest {
         @Test
         @DisplayName("Deve retornar 404 quando empresa não encontrada")
         void deveRetornarNotFoundQuandoNaoEncontrada() throws Exception {
-            // arrange
             Mockito.when(companyService.findById(99L))
                     .thenThrow(new ResourceNotFoundException("Empresa não encontrada"));
 
-            // act | assert
             mockMvc.perform(get("/api/companies/{id}", 99))
                     .andExpect(status().is(404));
         }
